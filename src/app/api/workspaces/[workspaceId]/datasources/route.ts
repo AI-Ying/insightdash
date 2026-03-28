@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyWorkspaceMembership } from "@/lib/api-utils";
 import { parseCSV } from "@/lib/csv-parser";
+import { fetchApiData, type ApiConfig } from "@/lib/api-parser";
+import { API_TEMPLATES } from "@/lib/constants";
 
 export async function GET(
   _request: Request,
@@ -30,7 +32,107 @@ export async function POST(
   const result = await verifyWorkspaceMembership(workspaceId);
   if ("error" in result) return result.error;
 
-  const formData = await request.formData();
+  const contentType = request.headers.get("content-type") || "";
+
+  // Handle JSON body (API data source)
+  if (contentType.includes("application/json")) {
+    const body = await request.json();
+    return handleApiDataSource(workspaceId, body);
+  }
+
+  // Handle FormData (CSV upload)
+  return handleCSVUpload(workspaceId, await request.formData());
+}
+
+async function handleApiDataSource(
+  workspaceId: string,
+  body: {
+    type: "API";
+    templateId?: string;
+    name?: string;
+    url?: string;
+    method?: "GET";
+    responsePath?: string;
+  }
+) {
+  const { templateId, name, url, method = "GET", responsePath } = body;
+
+  // Find template or validate custom URL
+  let apiConfig: ApiConfig;
+  let dsName: string;
+
+  if (templateId) {
+    const template = API_TEMPLATES.find((t) => t.id === templateId);
+    if (!template) {
+      return NextResponse.json({ error: "Template not found" }, { status: 400 });
+    }
+    apiConfig = {
+      url: template.url,
+      method: template.method,
+      responsePath: template.responsePath,
+    };
+    dsName = name || template.name;
+  } else if (url) {
+    // Validate URL
+    try {
+      new URL(url);
+    } catch {
+      return NextResponse.json({ error: "Invalid URL" }, { status: 400 });
+    }
+    apiConfig = { url, method, responsePath };
+    dsName = name || "API Data Source";
+  } else {
+    return NextResponse.json(
+      { error: "Either templateId or url is required" },
+      { status: 400 }
+    );
+  }
+
+  // Fetch and parse API data
+  let parsed;
+  try {
+    parsed = await fetchApiData(apiConfig);
+  } catch (e) {
+    return NextResponse.json(
+      { error: e instanceof Error ? e.message : "Failed to fetch API data" },
+      { status: 400 }
+    );
+  }
+
+  // Create data source with dataset
+  const dataSource = await prisma.dataSource.create({
+    data: {
+      name: dsName,
+      type: "API",
+      config: JSON.stringify({
+        templateId,
+        url: apiConfig.url,
+        method: apiConfig.method,
+        responsePath: apiConfig.responsePath,
+        fetchedAt: new Date().toISOString(),
+      }),
+      workspaceId,
+      datasets: {
+        create: {
+          name: dsName,
+          schema: JSON.stringify({
+            columns: parsed.columns,
+            rows: parsed.rows,
+            rowCount: parsed.rowCount,
+          }),
+        },
+      },
+    },
+    include: {
+      datasets: { select: { id: true, name: true } },
+      _count: { select: { datasets: true } },
+    },
+  });
+
+  return NextResponse.json(dataSource, { status: 201 });
+}
+
+async function handleCSVUpload(workspaceId: string, formData: FormData) {
   const file = formData.get("file") as File | null;
   const name = formData.get("name") as string | null;
 
