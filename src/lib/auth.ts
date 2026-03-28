@@ -8,6 +8,7 @@ import { loginSchema } from "@/lib/validations";
 import { generateUniqueSlug } from "@/lib/utils";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  trustHost: true,
   adapter: PrismaAdapter(prisma),
   session: { strategy: "jwt" },
   pages: {
