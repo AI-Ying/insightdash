@@ -1,0 +1,39 @@
+schema: spec-driven
+
+context: |
+  Tech stack: Next.js 15 (App Router) + React 19 + TypeScript 5.8
+  Database: PostgreSQL via Prisma ORM 6.5 (multi-tenant with Workspace scoping)
+  Auth: NextAuth v5 (beta) with JWT strategy, credentials + GitHub OAuth
+  UI: Tailwind CSS 4 + Lucide React icons + class-variance-authority
+  Charts: ECharts 5.6 + Recharts 2.15
+  Testing: Vitest 3.2 + Testing Library + jsdom
+  Deployment: Render.com (free tier), GitHub repo AI-Ying/insightdash
+  Architecture: Route groups (auth)/(dashboard), multi-tenant /w/[slug]/ URL pattern
+  Validation: Zod 4 for schema validation
+
+rules:
+  proposal:
+    - Include rollback plan for risky changes
+    - Identify affected modules/packages
+    - Consider multi-tenant workspace scoping for all features
+  specs:
+    - Use Given/When/Then format for scenarios
+    - Use RFC 2119 keywords (MUST, SHALL, SHOULD, MAY)
+  design:
+    - Include sequence diagrams for complex flows
+    - Document architecture decisions with rationale
+    - All data models must be workspace-scoped
+  tasks:
+    - Group tasks by phase (infrastructure, implementation, testing)
+    - Use hierarchical numbering (1.1, 1.2, etc.)
+    - Keep tasks small enough to complete in one session
+  apply:
+    - Follow existing code patterns and conventions
+    - Use App Router conventions (server components by default, "use client" only when needed)
+    - All API routes under /api/, dashboard pages under (dashboard)/w/[slug]/
+  verify:
+    - Run tests with vitest run
+    - Run build with next build
+    - Compare implementation against every spec scenario
+  archive:
+    - Warn before merging destructive deltas (large removals)

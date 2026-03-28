@@ -10,7 +10,7 @@ export default function Home() {
         </p>
         <div className="flex gap-4 justify-center">
           <a
-            href="/dashboard"
+            href="/register"
             className="rounded-lg bg-blue-600 px-6 py-3 font-semibold hover:bg-blue-500 transition-colors"
           >
             Get Started
