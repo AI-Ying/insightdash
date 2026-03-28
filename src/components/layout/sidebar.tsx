@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { WorkspaceSwitcher } from "./workspace-switcher";
 import {
   LayoutDashboard,
+  BarChart3,
   Database,
   Settings,
   ChevronLeft,
@@ -19,7 +20,8 @@ interface SidebarProps {
 }
 
 const navItems = [
-  { label: "Dashboards", icon: LayoutDashboard, href: "" },
+  { label: "Overview", icon: LayoutDashboard, href: "" },
+  { label: "Dashboards", icon: BarChart3, href: "/dashboards" },
   { label: "Data Sources", icon: Database, href: "/datasources" },
   { label: "Settings", icon: Settings, href: "/settings" },
 ];

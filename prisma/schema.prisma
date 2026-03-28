@@ -138,3 +138,39 @@ model Widget {
   dataset   Dataset?  @relation(fields: [datasetId], references: [id])
   dashboard Dashboard @relation(fields: [dashboardId], references: [id], onDelete: Cascade)
 }
+
+// ===== Enums =====
+enum Role {
+  OWNER
+  ADMIN
+  EDITOR
+  VIEWER
+}
+
+enum Plan {
+  FREE
+  PRO
+  ENTERPRISE
+}
+
+enum DataSourceType {
+  CSV
+  POSTGRESQL
+  MYSQL
+  API
+  SUPABASE
+}
+
+enum WidgetType {
+  LINE_CHART
+  BAR_CHART
+  PIE_CHART
+  AREA_CHART
+  SCATTER_CHART
+  HEATMAP
+  TABLE
+  KPI_CARD
+  MAP
+  FUNNEL
+  GAUGE
+}

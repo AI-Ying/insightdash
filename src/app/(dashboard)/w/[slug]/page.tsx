@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
+import Link from "next/link";
 
 export default async function WorkspacePage({
   params,
@@ -15,6 +16,11 @@ export default async function WorkspacePage({
     include: {
       members: { where: { userId: session?.user?.id } },
       _count: { select: { dashboards: true, dataSources: true } },
+      dashboards: {
+        take: 5,
+        orderBy: { updatedAt: "desc" },
+        include: { _count: { select: { widgets: true } } },
+      },
     },
   });
 
@@ -26,10 +32,13 @@ export default async function WorkspacePage({
     <div>
       <h1 className="text-2xl font-bold text-slate-900 mb-6">{workspace.name}</h1>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="rounded-xl border border-slate-200 bg-white p-6">
+        <Link
+          href={`/w/${slug}/dashboards`}
+          className="rounded-xl border border-slate-200 bg-white p-6 hover:border-blue-200 hover:shadow-md transition-all"
+        >
           <p className="text-sm text-slate-500">Dashboards</p>
           <p className="text-3xl font-bold text-slate-900 mt-1">{workspace._count.dashboards}</p>
-        </div>
+        </Link>
         <div className="rounded-xl border border-slate-200 bg-white p-6">
           <p className="text-sm text-slate-500">Data Sources</p>
           <p className="text-3xl font-bold text-slate-900 mt-1">{workspace._count.dataSources}</p>
@@ -39,12 +48,47 @@ export default async function WorkspacePage({
           <p className="text-3xl font-bold text-slate-900 mt-1">{workspace.members.length}</p>
         </div>
       </div>
-      {workspace._count.dashboards === 0 && (
+
+      {/* Recent Dashboards */}
+      {workspace.dashboards.length > 0 ? (
+        <div className="mt-8">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-slate-800">Recent Dashboards</h2>
+            <Link
+              href={`/w/${slug}/dashboards`}
+              className="text-sm text-blue-600 hover:underline"
+            >
+              View all
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {workspace.dashboards.map((d) => (
+              <Link
+                key={d.id}
+                href={`/w/${slug}/dashboards/${d.id}`}
+                className="rounded-xl border border-slate-200 bg-white p-5 hover:border-blue-200 hover:shadow-md transition-all"
+              >
+                <h3 className="font-semibold text-slate-900">{d.title}</h3>
+                <p className="mt-1 text-xs text-slate-400">
+                  {d._count.widgets} widgets &middot; Updated{" "}
+                  {new Date(d.updatedAt).toLocaleDateString()}
+                </p>
+              </Link>
+            ))}
+          </div>
+        </div>
+      ) : (
         <div className="mt-8 rounded-xl border-2 border-dashed border-slate-300 p-12 text-center">
           <h2 className="text-lg font-semibold text-slate-700">No dashboards yet</h2>
           <p className="mt-2 text-sm text-slate-500">
             Create your first dashboard to start visualizing your data.
           </p>
+          <Link
+            href={`/w/${slug}/dashboards`}
+            className="mt-4 inline-block rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+          >
+            Create Dashboard
+          </Link>
         </div>
       )}
     </div>
