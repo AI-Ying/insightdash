@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Database, Table2 } from "lucide-react";
 
 interface DatasetDetail {
   id: string;
@@ -32,11 +32,13 @@ export default function DataSourceDetailPage() {
 
   const [ds, setDs] = useState<DataSourceDetail | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeDataset, setActiveDataset] = useState<string>("");
+  const [activeDatasetId, setActiveDatasetId] = useState<string>("");
+  const [error, setError] = useState<string>("");
 
   useEffect(() => {
     async function load() {
       try {
+        setError("");
         const wsRes = await fetch("/api/workspaces");
         const workspaces = await wsRes.json();
         const ws = workspaces.find((w: { slug: string }) => w.slug === slug);
@@ -46,10 +48,16 @@ export default function DataSourceDetailPage() {
         if (res.ok) {
           const data = await res.json();
           setDs(data);
-          if (data.datasets.length > 0) setActiveDataset(data.datasets[0].id);
+          // Select first dataset by default
+          if (data.datasets.length > 0) {
+            setActiveDatasetId(data.datasets[0].id);
+          }
+        } else if (res.status === 404) {
+          setDs(null);
         }
       } catch (err) {
         console.error("Failed to load:", err);
+        setError("Failed to load data source");
       } finally {
         setLoading(false);
       }
@@ -65,28 +73,55 @@ export default function DataSourceDetailPage() {
     );
   }
 
-  if (!ds) {
+  if (error) {
     return (
       <div className="text-center py-20">
-        <p className="text-slate-500">Data source not found</p>
+        <p className="text-red-500">{error}</p>
+        <Link
+          href={`/w/${slug}/datasources`}
+          className="mt-4 inline-flex items-center gap-2 text-blue-600 hover:underline"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to data sources
+        </Link>
       </div>
     );
   }
 
-  const dataset = ds.datasets.find((d) => d.id === activeDataset);
+  if (!ds) {
+    return (
+      <div className="text-center py-20">
+        <p className="text-slate-500">Data source not found</p>
+        <Link
+          href={`/w/${slug}/datasources`}
+          className="mt-4 inline-flex items-center gap-2 text-blue-600 hover:underline"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to data sources
+        </Link>
+      </div>
+    );
+  }
+
+  // Find the active dataset and parse its schema
+  const activeDataset = ds.datasets.find((d) => d.id === activeDatasetId);
   let columns: Column[] = [];
   let rows: Record<string, string | number>[] = [];
+  let parseError = false;
 
-  if (dataset?.schema) {
+  if (activeDataset?.schema) {
     try {
-      const parsed = JSON.parse(dataset.schema);
+      const parsed = JSON.parse(activeDataset.schema);
       columns = parsed.columns || [];
       rows = parsed.rows || [];
-    } catch { /* ignore */ }
+    } catch {
+      parseError = true;
+    }
   }
 
   return (
     <div>
+      {/* Header */}
       <div className="flex items-center gap-3 mb-6">
         <Link
           href={`/w/${slug}/datasources`}
@@ -96,12 +131,50 @@ export default function DataSourceDetailPage() {
         </Link>
         <div>
           <h1 className="text-2xl font-bold text-slate-900">{ds.name}</h1>
-          <p className="text-sm text-slate-500">{ds.type} &middot; {rows.length.toLocaleString()} rows &middot; {columns.length} columns</p>
+          <p className="text-sm text-slate-500">{ds.type} &middot; {ds.datasets.length} dataset{ds.datasets.length !== 1 ? "s" : ""}</p>
         </div>
       </div>
 
+      {/* Dataset Tabs - Only show if multiple datasets */}
+      {ds.datasets.length > 0 && (
+        <div className="mb-4 border-b border-slate-200">
+          <div className="flex gap-4">
+            {ds.datasets.map((dataset) => (
+              <button
+                key={dataset.id}
+                onClick={() => setActiveDatasetId(dataset.id)}
+                className={`flex items-center gap-2 px-3 py-2 text-sm font-medium border-b-2 transition-colors -mb-px ${
+                  activeDatasetId === dataset.id
+                    ? "border-blue-600 text-blue-600"
+                    : "border-transparent text-slate-500 hover:text-slate-700"
+                }`}
+              >
+                <Table2 className="h-4 w-4" />
+                {dataset.name}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* No Datasets */}
+      {ds.datasets.length === 0 && (
+        <div className="rounded-xl border-2 border-dashed border-slate-300 p-12 text-center">
+          <Database className="mx-auto h-12 w-12 text-slate-300" />
+          <h2 className="mt-4 text-lg font-semibold text-slate-700">No datasets</h2>
+          <p className="mt-2 text-sm text-slate-500">This data source has no datasets.</p>
+        </div>
+      )}
+
+      {/* Parse Error */}
+      {parseError && (
+        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-red-600">
+          Failed to parse dataset schema. The data may be corrupted.
+        </div>
+      )}
+
       {/* Data Table Preview */}
-      {columns.length > 0 && (
+      {columns.length > 0 && !parseError && (
         <div className="rounded-xl border border-slate-200 bg-white overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -136,6 +209,18 @@ export default function DataSourceDetailPage() {
               Showing 50 of {rows.length.toLocaleString()} rows
             </div>
           )}
+          {rows.length === 0 && (
+            <div className="px-4 py-8 text-center text-sm text-slate-400">
+              No data in this dataset
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Empty Dataset (has dataset but no schema) */}
+      {ds.datasets.length > 0 && !activeDataset?.schema && !parseError && (
+        <div className="rounded-xl border border-slate-200 bg-white p-8 text-center">
+          <p className="text-slate-500">This dataset has no data.</p>
         </div>
       )}
     </div>
