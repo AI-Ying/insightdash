@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { SampleDataLoader } from "@/components/workspace/sample-data-loader";
 
 export default async function WorkspacePage({
   params,
@@ -21,12 +22,19 @@ export default async function WorkspacePage({
         orderBy: { updatedAt: "desc" },
         include: { _count: { select: { widgets: true } } },
       },
+      dataSources: {
+        take: 1,
+        where: { name: "工厂传感器示例数据" },
+        select: { id: true },
+      },
     },
   });
 
   if (!workspace || workspace.members.length === 0) {
     notFound();
   }
+
+  const hasSampleData = workspace.dataSources.length > 0;
 
   return (
     <div>
@@ -39,15 +47,27 @@ export default async function WorkspacePage({
           <p className="text-sm text-slate-500">Dashboards</p>
           <p className="text-3xl font-bold text-slate-900 mt-1">{workspace._count.dashboards}</p>
         </Link>
-        <div className="rounded-xl border border-slate-200 bg-white p-6">
+        <Link
+          href={`/w/${slug}/datasources`}
+          className="rounded-xl border border-slate-200 bg-white p-6 hover:border-blue-200 hover:shadow-md transition-all"
+        >
           <p className="text-sm text-slate-500">Data Sources</p>
           <p className="text-3xl font-bold text-slate-900 mt-1">{workspace._count.dataSources}</p>
-        </div>
+        </Link>
         <div className="rounded-xl border border-slate-200 bg-white p-6">
           <p className="text-sm text-slate-500">Members</p>
           <p className="text-3xl font-bold text-slate-900 mt-1">{workspace.members.length}</p>
         </div>
       </div>
+
+      {/* Sample Data Loader - only show if no dashboards exist */}
+      {workspace._count.dashboards === 0 && (
+        <SampleDataLoader
+          workspaceId={workspace.id}
+          slug={slug}
+          hasData={hasSampleData}
+        />
+      )}
 
       {/* Recent Dashboards */}
       {workspace.dashboards.length > 0 ? (
