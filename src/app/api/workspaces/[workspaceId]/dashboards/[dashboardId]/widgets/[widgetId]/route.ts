@@ -40,8 +40,8 @@ export async function PATCH(
   const updateData: Record<string, unknown> = {};
   if (parsed.data.title !== undefined) updateData.title = parsed.data.title;
   if (parsed.data.type !== undefined) updateData.type = parsed.data.type;
-  if (parsed.data.config !== undefined) updateData.config = parsed.data.config;
-  if (parsed.data.position !== undefined) updateData.position = parsed.data.position;
+  if (parsed.data.config !== undefined) updateData.config = JSON.stringify(parsed.data.config);
+  if (parsed.data.position !== undefined) updateData.position = JSON.stringify(parsed.data.position);
   if (parsed.data.datasetId !== undefined) updateData.datasetId = parsed.data.datasetId;
 
   const widget = await prisma.widget.update({

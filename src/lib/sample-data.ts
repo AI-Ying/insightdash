@@ -85,12 +85,12 @@ export async function seedWorkspaceSampleData(workspaceId: string) {
     data: {
       name: "Sample Data",
       type: "CSV",
-      config: { source: "built-in-samples" },
+      config: JSON.stringify({ source: "built-in-samples" }),
       workspaceId,
       datasets: {
         create: SAMPLE_DATASETS.map((ds) => ({
           name: ds.name,
-          schema: { columns: ds.columns, rows: ds.rows },
+          schema: JSON.stringify({ columns: ds.columns, rows: ds.rows }),
         })),
       },
     },

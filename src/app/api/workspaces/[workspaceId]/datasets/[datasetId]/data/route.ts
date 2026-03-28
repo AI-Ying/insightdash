@@ -23,7 +23,10 @@ export async function GET(
     return NextResponse.json({ error: "Dataset not found" }, { status: 404 });
   }
 
-  const schema = dataset.schema as unknown as DatasetSchema | null;
+  let schema: DatasetSchema | null = null;
+  if (dataset.schema) {
+    try { schema = JSON.parse(dataset.schema as string) as DatasetSchema; } catch { /* ignore */ }
+  }
   const rows = schema?.rows || [];
   const columns = schema?.columns || [];
 

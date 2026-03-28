@@ -89,7 +89,13 @@ export default function DashboardEditorPage() {
   const handleEditWidget = (widgetId: string) => {
     const widget = dashboard?.widgets.find((w) => w.id === widgetId);
     if (widget) {
-      setEditingWidget(widget);
+      // Parse stringified JSON from API
+      const parsed = {
+        ...widget,
+        config: typeof widget.config === "string" ? JSON.parse(widget.config) : widget.config,
+        position: typeof widget.position === "string" ? JSON.parse(widget.position) : widget.position,
+      };
+      setEditingWidget(parsed);
       setPanelOpen(true);
     }
   };

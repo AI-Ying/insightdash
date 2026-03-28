@@ -51,8 +51,8 @@ export async function POST(
     data: {
       title: parsed.data.title,
       type: parsed.data.type,
-      config: JSON.parse(JSON.stringify(parsed.data.config)),
-      position: JSON.parse(JSON.stringify(parsed.data.position)),
+      config: JSON.stringify(parsed.data.config),
+      position: JSON.stringify(parsed.data.position),
       datasetId: parsed.data.datasetId || null,
       dashboardId,
     },

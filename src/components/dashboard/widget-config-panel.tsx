@@ -2,12 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
-import type { WidgetConfig, DatasetSchema } from "@/lib/types";
+import type { WidgetConfig, DatasetSchema, DatasetColumn } from "@/lib/types";
 
 interface DatasetOption {
   id: string;
   name: string;
-  schema: DatasetSchema | null;
+  schema: DatasetSchema | string | null;
 }
 
 interface WidgetConfigPanelProps {
@@ -58,7 +58,9 @@ export function WidgetConfigPanel({
   const [width, setWidth] = useState(1);
 
   const selectedDataset = datasets.find((d) => d.id === datasetId);
-  const columns = selectedDataset?.schema?.columns || [];
+  const rawSchema = selectedDataset?.schema;
+  const parsedSchema = typeof rawSchema === "string" ? (() => { try { return JSON.parse(rawSchema); } catch { return null; } })() : rawSchema;
+  const columns: DatasetColumn[] = parsedSchema?.columns || [];
   const stringColumns = columns.filter((c) => c.type === "string");
   const numberColumns = columns.filter((c) => c.type === "number");
 
@@ -92,7 +94,7 @@ export function WidgetConfigPanel({
     if (numberColumns.length > 0 && !yField) {
       setYField(numberColumns[0].name);
       if (numberColumns.length > 1) {
-        setYFields(numberColumns.slice(0, 2).map((c) => c.name));
+        setYFields(numberColumns.slice(0, 2).map((c: { name: string }) => c.name));
       }
     }
   }, [datasetId, stringColumns.length, numberColumns.length]);

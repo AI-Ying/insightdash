@@ -46,9 +46,10 @@ export function WidgetGrid({ widgets, onEdit, onDelete, editable = false }: Widg
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {widgets.map((widget) => {
-        const config = (widget.config || {}) as WidgetConfig;
-        const position = (widget.position || { col: 0, row: 0, w: 1, h: 2 }) as WidgetPosition;
-        const datasetSchema = (widget.dataset?.schema || null) as DatasetSchema | null;
+        const config = (typeof widget.config === "string" ? JSON.parse(widget.config) : widget.config || {}) as WidgetConfig;
+        const position = (typeof widget.position === "string" ? JSON.parse(widget.position) : widget.position || { col: 0, row: 0, w: 1, h: 2 }) as WidgetPosition;
+        const rawSchema = widget.dataset?.schema;
+        const datasetSchema = (typeof rawSchema === "string" ? JSON.parse(rawSchema) : rawSchema || null) as DatasetSchema | null;
         const heightClass = HEIGHT_MAP[position.h] || "h-72";
         const colSpan = position.w === 2 ? "md:col-span-2" : "";
 
