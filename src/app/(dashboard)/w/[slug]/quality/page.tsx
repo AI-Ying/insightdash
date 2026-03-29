@@ -21,7 +21,7 @@ import {
 import { SAMPLE_DATA } from "@/lib/constants";
 import { DrillDownNav } from "@/components/charts/quality/drill-down-nav";
 import { DeviceDetailPanel } from "@/components/charts/quality/device-detail-panel";
-import { BarChart3, TrendingUp, TrendingDown, AlertTriangle, Minus, History, ChevronRight } from "lucide-react";
+import { BarChart3, TrendingUp, TrendingDown, AlertTriangle, Minus, History, ChevronRight, Plus } from "lucide-react";
 
 export default function QualityDashboardPage() {
   const params = useParams();
@@ -159,6 +159,14 @@ export default function QualityDashboardPage() {
           >
             <AlertTriangle className="h-4 w-4" />
             告警配置
+          </Link>
+          {/* Entry link */}
+          <Link
+            href={`/w/${slug}/quality/entry`}
+            className="flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+          >
+            <Plus className="h-4 w-4" />
+            录入
           </Link>
         </div>
       </div>
