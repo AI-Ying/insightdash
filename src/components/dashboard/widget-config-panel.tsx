@@ -33,11 +33,11 @@ interface WidgetConfigPanelProps {
 }
 
 const CHART_TYPES = [
-  { value: "BAR_CHART", label: "Bar Chart" },
-  { value: "LINE_CHART", label: "Line Chart" },
-  { value: "PIE_CHART", label: "Pie Chart" },
-  { value: "AREA_CHART", label: "Area Chart" },
-  { value: "KPI_CARD", label: "KPI Card" },
+  { value: "BAR_CHART", label: "柱状图" },
+  { value: "LINE_CHART", label: "折线图" },
+  { value: "PIE_CHART", label: "饼图" },
+  { value: "AREA_CHART", label: "面积图" },
+  { value: "KPI_CARD", label: "KPI 指标卡" },
 ];
 
 export function WidgetConfigPanel({
@@ -127,7 +127,7 @@ export function WidgetConfigPanel({
     const col = initialData?.position.col ?? widgetCount % 2;
 
     onSave({
-      title: title || "Untitled Widget",
+      title: title || "未命名组件",
       type,
       config,
       position: { col, row, w: width, h: type === "KPI_CARD" ? 1 : 2 },
@@ -142,7 +142,7 @@ export function WidgetConfigPanel({
       <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-lg font-bold text-slate-900">
-            {initialData?.id ? "Edit Widget" : "Add Widget"}
+            {initialData?.id ? "编辑组件" : "添加组件"}
           </h2>
           <button
             onClick={onClose}
@@ -155,19 +155,19 @@ export function WidgetConfigPanel({
         <div className="space-y-4">
           {/* Title */}
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Title</label>
+            <label className="block text-sm font-medium text-slate-700 mb-1">组件标题</label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Widget title"
+              placeholder="输入组件标题"
               className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
           </div>
 
           {/* Chart Type */}
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Chart Type</label>
+            <label className="block text-sm font-medium text-slate-700 mb-1">图表类型</label>
             <div className="grid grid-cols-5 gap-2">
               {CHART_TYPES.map((ct) => (
                 <button
@@ -187,7 +187,7 @@ export function WidgetConfigPanel({
 
           {/* Dataset */}
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Dataset</label>
+            <label className="block text-sm font-medium text-slate-700 mb-1">数据集</label>
             <select
               value={datasetId}
               onChange={(e) => {
@@ -198,7 +198,7 @@ export function WidgetConfigPanel({
               }}
               className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             >
-              <option value="">Select a dataset</option>
+              <option value="">选择数据集</option>
               {datasets.map((ds) => (
                 <option key={ds.id} value={ds.id}>
                   {ds.name}
@@ -212,14 +212,14 @@ export function WidgetConfigPanel({
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                  {type === "PIE_CHART" ? "Category Field" : "X-Axis"}
+                  {type === "PIE_CHART" ? "分类字段" : "X 轴字段"}
                 </label>
                 <select
                   value={xField}
                   onChange={(e) => setXField(e.target.value)}
                   className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 >
-                  <option value="">Select field</option>
+                  <option value="">选择字段</option>
                   {columns.map((c) => (
                     <option key={c.name} value={c.name}>
                       {c.name}
@@ -229,14 +229,14 @@ export function WidgetConfigPanel({
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                  {type === "PIE_CHART" ? "Value Field" : "Y-Axis"}
+                  {type === "PIE_CHART" ? "数值字段" : "Y 轴字段"}
                 </label>
                 <select
                   value={yField}
                   onChange={(e) => setYField(e.target.value)}
                   className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 >
-                  <option value="">Select field</option>
+                  <option value="">选择字段</option>
                   {numberColumns.map((c) => (
                     <option key={c.name} value={c.name}>
                       {c.name}
@@ -251,7 +251,7 @@ export function WidgetConfigPanel({
           {datasetId && ["BAR_CHART", "LINE_CHART", "AREA_CHART"].includes(type) && numberColumns.length > 1 && (
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
-                Multiple Y-Axis Fields (optional)
+                多 Y 轴字段（可选）
               </label>
               <div className="flex flex-wrap gap-2">
                 {numberColumns.map((c) => (
@@ -275,13 +275,13 @@ export function WidgetConfigPanel({
           {datasetId && type === "KPI_CARD" && (
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Value Field</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">数值字段</label>
                 <select
                   value={yField}
                   onChange={(e) => setYField(e.target.value)}
                   className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 >
-                  <option value="">Select field</option>
+                  <option value="">选择字段</option>
                   {numberColumns.map((c) => (
                     <option key={c.name} value={c.name}>
                       {c.name}
@@ -290,15 +290,21 @@ export function WidgetConfigPanel({
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Aggregation</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">聚合方式</label>
                 <select
                   value={aggregation}
                   onChange={(e) => setAggregation(e.target.value)}
                   className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 >
-                  {["sum", "avg", "count", "min", "max"].map((a) => (
-                    <option key={a} value={a}>
-                      {a.toUpperCase()}
+                  {[
+                    { value: "sum", label: "求和" },
+                    { value: "avg", label: "平均值" },
+                    { value: "count", label: "计数" },
+                    { value: "min", label: "最小值" },
+                    { value: "max", label: "最大值" },
+                  ].map((a) => (
+                    <option key={a.value} value={a.value}>
+                      {a.label}
                     </option>
                   ))}
                 </select>
@@ -308,7 +314,7 @@ export function WidgetConfigPanel({
 
           {/* Width */}
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Width</label>
+            <label className="block text-sm font-medium text-slate-700 mb-1">宽度</label>
             <div className="flex gap-2">
               <button
                 onClick={() => setWidth(1)}
@@ -318,7 +324,7 @@ export function WidgetConfigPanel({
                     : "border-slate-200 text-slate-600 hover:border-slate-300"
                 }`}
               >
-                Half Width
+                半宽
               </button>
               <button
                 onClick={() => setWidth(2)}
@@ -328,7 +334,7 @@ export function WidgetConfigPanel({
                     : "border-slate-200 text-slate-600 hover:border-slate-300"
                 }`}
               >
-                Full Width
+                全宽
               </button>
             </div>
           </div>
@@ -340,14 +346,14 @@ export function WidgetConfigPanel({
             onClick={onClose}
             className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
           >
-            Cancel
+            取消
           </button>
           <button
             onClick={handleSave}
             disabled={!title && !type}
             className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
           >
-            {initialData?.id ? "Update" : "Add Widget"}
+            {initialData?.id ? "保存" : "添加"}
           </button>
         </div>
       </div>

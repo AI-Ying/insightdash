@@ -6,9 +6,14 @@ export const loginSchema = z.object({
 });
 
 export const registerSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
-  email: z.string().email("Please enter a valid email"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
+  name: z.string().min(2, "姓名至少2个字符"),
+  email: z.string().email("请输入有效的邮箱地址"),
+  password: z
+    .string()
+    .min(8, "密码至少8个字符")
+    .regex(/[A-Z]/, "密码必须包含大写字母")
+    .regex(/[a-z]/, "密码必须包含小写字母")
+    .regex(/[0-9]/, "密码必须包含数字"),
 });
 
 export const workspaceSchema = z.object({
