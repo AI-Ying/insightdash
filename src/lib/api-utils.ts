@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { errors } from "./api-response";
 
 /**
  * Verifies current user is authenticated and a member of the given workspace.
@@ -10,7 +11,7 @@ export async function verifyWorkspaceMembership(workspaceId: string) {
   const session = await auth();
   if (!session?.user?.id) {
     return {
-      error: NextResponse.json({ error: "Unauthorized" }, { status: 401 }),
+      error: errors.unauthorized(),
     };
   }
 
@@ -25,9 +26,23 @@ export async function verifyWorkspaceMembership(workspaceId: string) {
 
   if (!membership) {
     return {
-      error: NextResponse.json({ error: "Not a workspace member" }, { status: 403 }),
+      error: errors.forbidden(),
     };
   }
 
   return { session, membership };
+}
+
+/**
+ * Create an error response with timeout context
+ */
+export function timeoutError() {
+  return errors.serverError("请求超时，请稍后重试");
+}
+
+/**
+ * Create a not found error for a specific resource
+ */
+export function notFoundError(resource: string) {
+  return errors.notFound(resource);
 }
