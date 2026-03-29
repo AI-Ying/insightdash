@@ -1,9 +1,8 @@
 /**
  * PDF Export Utility
- * Handles Tailwind CSS v4 oklch issue by completely disabling stylesheets
+ * Uses iframe isolation to avoid oklch CSS parsing errors
  */
 
-import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
 
 export interface ExportOptions {
@@ -20,65 +19,88 @@ export async function exportToPDF(
     throw new Error("仪表板内容为空或未加载完成，请稍后重试");
   }
 
-  // Create a clean white container
-  const container = document.createElement('div');
-  container.style.cssText = `
+  // Create an isolated iframe - this prevents oklch parsing errors
+  const iframe = document.createElement('iframe');
+  iframe.style.cssText = `
     position: absolute;
     left: -9999px;
     top: 0;
     width: ${element.scrollWidth}px;
-    min-height: ${element.scrollHeight}px;
-    background: white;
-    padding: 20px;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    height: ${element.scrollHeight}px;
+    border: none;
   `;
-  
-  // Clone with NO classes (strip all class attributes)
-  const clone = element.cloneNode(true) as HTMLElement;
-  removeAllClasses(clone);
-  
-  // Force inline styles for all elements (white bg, black text)
-  forceInlineStyles(clone);
-  
-  container.appendChild(clone);
-  document.body.appendChild(container);
+  document.body.appendChild(iframe);
+
+  const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+  if (!iframeDoc) {
+    document.body.removeChild(iframe);
+    throw new Error("无法创建PDF内容");
+  }
 
   try {
-    await new Promise(resolve => setTimeout(resolve, 100));
+    // Write content with basic styles only (NO Tailwind, NO oklch)
+    iframeDoc.open();
+    iframeDoc.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <style>
+          * { box-sizing: border-box; margin: 0; padding: 0; }
+          body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-size: 14px;
+            line-height: 1.5;
+            background: white;
+            color: #000;
+            padding: 20px;
+          }
+          .box {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 8px 0;
+          }
+          .kpi {
+            display: inline-block;
+            padding: 12px 16px;
+            margin: 4px;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+          }
+        </style>
+      </head>
+      <body></body>
+      </html>
+    `);
+    iframeDoc.close();
+
+    // Clone the element's inner HTML into the iframe body
+    const iframeBody = iframeDoc.body;
+    const cloned = element.cloneNode(true) as HTMLElement;
     
-    const canvas = await html2canvas(container, {
+    // Strip ALL class attributes and data-* attributes
+    stripAllAttributes(cloned);
+    
+    iframeBody.appendChild(cloned);
+
+    // Wait for render
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    // Capture with html2canvas - iframe has NO external stylesheets
+    const html2canvas = (await import('html2canvas')).default;
+    
+    const canvas = await html2canvas(iframeBody, {
       scale: 2,
       useCORS: true,
       logging: false,
       backgroundColor: "#ffffff",
-      // Intercept the clone and strip ALL CSS
-      onclone: (clonedDoc, clonedBody) => {
-        // Remove ALL stylesheets - this is the key fix
-        const allStyles = clonedDoc.querySelectorAll('style, link[rel="stylesheet"]');
-        allStyles.forEach(el => el.remove());
-        
-        // Remove any element with classes (shouldn't exist but just in case)
-        const withClasses = clonedBody.querySelectorAll('[class]');
-        withClasses.forEach(el => el.removeAttribute('class'));
-        
-        // Force white bg, black text on body
-        clonedBody.style.backgroundColor = 'white';
-        clonedBody.style.color = 'black';
-        
-        // Add override style to force everything to white/black
-        const overrideStyle = clonedDoc.createElement('style');
-        overrideStyle.textContent = `
-          * { 
-            background-color: white !important; 
-            background: white !important; 
-            color: black !important; 
-            border-color: #ddd !important; 
-          }
-        `;
-        clonedBody.appendChild(overrideStyle);
-      },
+      // No onclone needed - iframe has no external styles
     });
 
+    // Create PDF
     const pdf = new jsPDF({
       orientation: options.orientation,
       unit: "mm",
@@ -103,34 +125,28 @@ export async function exportToPDF(
     }
 
     pdf.save(`${filename}.pdf`);
+
   } finally {
-    document.body.removeChild(container);
+    document.body.removeChild(iframe);
   }
 }
 
-function removeAllClasses(el: Element): void {
-  el.removeAttribute('class');
-  el.querySelectorAll('*').forEach(child => child.removeAttribute('class'));
-}
-
-function forceInlineStyles(el: Element): void {
-  // Set white background and black text
-  el.style.backgroundColor = 'white';
-  el.style.color = 'black';
+/**
+ * Strip all class, style, and data attributes from element and children
+ */
+function stripAllAttributes(el: Element): void {
+  // Remove all attributes except tag name
+  while (el.attributes.length > 0) {
+    el.removeAttribute(el.attributes[0].name);
+  }
   
-  // Recursively apply to all children
-  el.querySelectorAll('*').forEach(child => {
-    const htmlEl = child as HTMLElement;
-    htmlEl.style.backgroundColor = 'white';
-    htmlEl.style.color = 'black';
-    // Preserve some layout styles
-    if (htmlEl.style.display === 'flex') {
-      htmlEl.style.display = 'flex';
-    }
-    if (htmlEl.style.width) {
-      htmlEl.style.width = htmlEl.style.width;
-    }
-  });
+  // Add basic inline styles to ensure visibility
+  el.setAttribute('style', 'background: white; color: black; font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif; font-size: 14px;');
+  
+  // Recursively strip children
+  for (const child of el.children) {
+    stripAllAttributes(child);
+  }
 }
 
 export function formatFilename(title: string): string {
