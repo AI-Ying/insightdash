@@ -235,7 +235,7 @@ export default function DashboardEditorPage() {
       </div>
 
       {/* Widget Grid */}
-      <div ref={dashboardRef} className="bg-white rounded-xl border border-slate-200 p-6">
+      <div ref={dashboardRef} className="bg-white rounded-xl border border-slate-200 p-6 min-h-[400px]">
         <WidgetGrid
           widgets={dashboard.widgets}
           onEdit={handleEditWidget}
