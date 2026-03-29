@@ -33,8 +33,9 @@ export function ExportDialog({ open, onClose, dashboardTitle, targetRef }: Expor
       await exportToPDF(targetRef.current, filename, options);
       onClose();
     } catch (e) {
-      const message = e instanceof Error ? e.message : "导出失败，请重试";
-      setError(message);
+      const err = e instanceof Error ? e.message : String(e);
+      console.error("PDF Export Error:", e);
+      setError(`导出失败: ${err}`);
     } finally {
       setLoading(false);
     }
