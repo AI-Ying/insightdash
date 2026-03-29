@@ -101,7 +101,7 @@ export default function DashboardEditorPage() {
   };
 
   const handleDeleteWidget = async (widgetId: string) => {
-    if (!confirm("Delete this widget?")) return;
+    if (!confirm("确定删除此组件吗？")) return;
     try {
       const res = await fetch(
         `/api/workspaces/${workspaceId}/dashboards/${dashboardId}/widgets/${widgetId}`,
@@ -113,7 +113,7 @@ export default function DashboardEditorPage() {
         );
       }
     } catch (err) {
-      console.error("Failed to delete widget:", err);
+      console.error("删除组件失败:", err);
     }
   };
 
@@ -166,7 +166,7 @@ export default function DashboardEditorPage() {
         }
       }
     } catch (err) {
-      console.error("Failed to save widget:", err);
+      console.error("保存组件失败:", err);
     }
     setPanelOpen(false);
     setEditingWidget(null);
@@ -218,7 +218,7 @@ export default function DashboardEditorPage() {
           className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
         >
           <Plus className="h-4 w-4" />
-          Add Widget
+          添加组件
         </button>
       </div>
 

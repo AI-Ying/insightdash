@@ -21,11 +21,11 @@ interface SidebarProps {
 }
 
 const navItems = [
-  { label: "Overview", icon: LayoutDashboard, href: "" },
-  { label: "Dashboards", icon: BarChart3, href: "/dashboards" },
+  { label: "概览", icon: LayoutDashboard, href: "" },
+  { label: "仪表板", icon: BarChart3, href: "/dashboards" },
   { label: "质量大屏", icon: Activity, href: "/quality" },
-  { label: "Data Sources", icon: Database, href: "/datasources" },
-  { label: "Settings", icon: Settings, href: "/settings" },
+  { label: "数据源", icon: Database, href: "/datasources" },
+  { label: "设置", icon: Settings, href: "/settings" },
 ];
 
 export function Sidebar({ workspaceSlug, workspaces }: SidebarProps) {

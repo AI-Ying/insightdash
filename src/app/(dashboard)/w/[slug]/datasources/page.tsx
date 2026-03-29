@@ -38,7 +38,7 @@ export default function DataSourcesPage() {
         const res = await fetch(`/api/workspaces/${ws.id}/datasources`);
         if (res.ok) setDataSources(await res.json());
       } catch (err) {
-        console.error("Failed to load data sources:", err);
+        console.error("加载数据源失败:", err);
       } finally {
         setLoading(false);
       }
@@ -58,7 +58,7 @@ export default function DataSourcesPage() {
 
     if (!res.ok) {
       const data = await res.json();
-      throw new Error(data.error || "Upload failed");
+      throw new Error(data.error || "上传失败");
     }
 
     const created = await res.json();
@@ -83,7 +83,7 @@ export default function DataSourcesPage() {
 
     if (!res.ok) {
       const data = await res.json();
-      throw new Error(data.error || "Failed to create API data source");
+      throw new Error(data.error || "创建 API 数据源失败");
     }
 
     const created = await res.json();
@@ -91,14 +91,14 @@ export default function DataSourcesPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Delete this data source and all its datasets?")) return;
+    if (!confirm("确定删除此数据源及其所有数据集吗？")) return;
     try {
       const res = await fetch(`/api/workspaces/${workspaceId}/datasources/${id}`, {
         method: "DELETE",
       });
       if (res.ok) setDataSources((prev) => prev.filter((d) => d.id !== id));
     } catch (err) {
-      console.error("Failed to delete:", err);
+      console.error("删除失败:", err);
     }
   };
 
@@ -113,7 +113,7 @@ export default function DataSourcesPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-slate-900">Data Sources</h1>
+        <h1 className="text-2xl font-bold text-slate-900">数据源</h1>
         <div className="flex items-center gap-3">
           <button
             onClick={() => setShowApiUpload(true)}
@@ -147,7 +147,7 @@ export default function DataSourcesPage() {
       {dataSources.length === 0 ? (
         <div className="rounded-xl border-2 border-dashed border-slate-300 p-12 text-center">
           <Database className="mx-auto h-12 w-12 text-slate-300" />
-          <h2 className="mt-4 text-lg font-semibold text-slate-700">No data sources yet</h2>
+          <h2 className="mt-4 text-lg font-semibold text-slate-700">暂无数据源</h2>
           <p className="mt-2 text-sm text-slate-500">上传 CSV 文件或添加 API 数据源开始。</p>
           <div className="mt-4 flex justify-center gap-3">
             <button
@@ -193,8 +193,8 @@ export default function DataSourcesPage() {
                   <div>
                     <h3 className="font-semibold text-slate-900">{ds.name}</h3>
                     <p className="text-xs text-slate-400">
-                      {ds.type} &middot; {ds._count.datasets} dataset{ds._count.datasets !== 1 ? "s" : ""}
-                      {meta.rowCount ? ` \u00b7 ${meta.rowCount.toLocaleString()} rows` : ""}
+                      {ds.type} &middot; {ds._count.datasets} 个数据集
+                      {meta.rowCount ? ` \u00b7 ${meta.rowCount.toLocaleString()} 行` : ""}
                       {isApi && meta.url ? ` \u00b7 API` : ""}
                     </p>
                   </div>

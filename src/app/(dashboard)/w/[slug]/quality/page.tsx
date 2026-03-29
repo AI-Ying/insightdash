@@ -34,7 +34,7 @@ export default function QualityDashboardPage() {
         setRecords(parsed);
         setWorkshops(["全部", ...getWorkshops(parsed)]);
       } catch (e) {
-        setError("Failed to load sample data");
+        setError("加载示例数据失败");
       } finally {
         setLoading(false);
       }

@@ -48,7 +48,7 @@ export function WorkspaceSwitcher({ currentSlug, workspaces, collapsed }: Worksp
         setNewName("");
       }
     } catch (error) {
-      console.error("Failed to create workspace:", error);
+      console.error("创建工作空间失败:", error);
     }
   }
 
@@ -72,7 +72,7 @@ export function WorkspaceSwitcher({ currentSlug, workspaces, collapsed }: Worksp
           {current?.name?.[0]?.toUpperCase() || "W"}
         </div>
         <span className="flex-1 truncate text-left font-medium text-slate-700">
-          {current?.name || "Select workspace"}
+          {current?.name || "选择工作空间"}
         </span>
         <ChevronsUpDown className="h-4 w-4 text-slate-400" />
       </button>
@@ -106,7 +106,7 @@ export function WorkspaceSwitcher({ currentSlug, workspaces, collapsed }: Worksp
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleCreate()}
-                  placeholder="Workspace name"
+                  placeholder="工作空间名称"
                   className="w-full rounded border border-slate-300 px-2 py-1 text-sm focus:border-blue-500 focus:outline-none"
                 />
               </div>
@@ -116,7 +116,7 @@ export function WorkspaceSwitcher({ currentSlug, workspaces, collapsed }: Worksp
                 className="flex w-full items-center gap-2 px-3 py-2 text-sm text-slate-600 hover:bg-slate-50"
               >
                 <Plus className="h-4 w-4" />
-                New Workspace
+                新建工作空间
               </button>
             )}
           </div>

@@ -43,7 +43,7 @@ export default function DashboardsPage() {
         const data = await res.json();
         setDashboards(data);
       } catch (err) {
-        console.error("Failed to load dashboards:", err);
+        console.error("加载仪表板失败:", err);
       } finally {
         setLoading(false);
       }
@@ -65,14 +65,14 @@ export default function DashboardsPage() {
         router.push(`/w/${slug}/dashboards/${dashboard.id}`);
       }
     } catch (err) {
-      console.error("Failed to create dashboard:", err);
+      console.error("创建仪表板失败:", err);
     } finally {
       setCreating(false);
     }
   };
 
   const handleDelete = async (dashboardId: string) => {
-    if (!confirm("Are you sure you want to delete this dashboard?")) return;
+    if (!confirm("确定删除此仪表板吗？")) return;
     try {
       const res = await fetch(`/api/workspaces/${workspaceId}/dashboards/${dashboardId}`, {
         method: "DELETE",
@@ -81,7 +81,7 @@ export default function DashboardsPage() {
         setDashboards((prev) => prev.filter((d) => d.id !== dashboardId));
       }
     } catch (err) {
-      console.error("Failed to delete dashboard:", err);
+      console.error("删除仪表板失败:", err);
     }
   };
 
@@ -96,13 +96,13 @@ export default function DashboardsPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-slate-900">Dashboards</h1>
+        <h1 className="text-2xl font-bold text-slate-900">仪表板</h1>
         <button
           onClick={() => setShowCreate(true)}
           className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
         >
           <Plus className="h-4 w-4" />
-          New Dashboard
+          新建仪表板
         </button>
       </div>
 
@@ -110,18 +110,18 @@ export default function DashboardsPage() {
       {showCreate && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
-            <h2 className="text-lg font-bold text-slate-900 mb-4">Create Dashboard</h2>
+            <h2 className="text-lg font-bold text-slate-900 mb-4">创建仪表板</h2>
             <div className="space-y-3">
               <input
                 type="text"
-                placeholder="Dashboard title"
+                placeholder="仪表板标题"
                 value={newTitle}
                 onChange={(e) => setNewTitle(e.target.value)}
                 className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 autoFocus
               />
               <textarea
-                placeholder="Description (optional)"
+                placeholder="描述（可选）"
                 value={newDesc}
                 onChange={(e) => setNewDesc(e.target.value)}
                 rows={2}
@@ -137,14 +137,14 @@ export default function DashboardsPage() {
                 }}
                 className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
               >
-                Cancel
+                取消
               </button>
               <button
                 onClick={handleCreate}
                 disabled={!newTitle.trim() || creating}
                 className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
               >
-                {creating ? "Creating..." : "Create"}
+                {creating ? "创建中..." : "创建"}
               </button>
             </div>
           </div>
@@ -155,16 +155,16 @@ export default function DashboardsPage() {
       {dashboards.length === 0 ? (
         <div className="rounded-xl border-2 border-dashed border-slate-300 p-12 text-center">
           <LayoutDashboard className="mx-auto h-12 w-12 text-slate-300" />
-          <h2 className="mt-4 text-lg font-semibold text-slate-700">No dashboards yet</h2>
+          <h2 className="mt-4 text-lg font-semibold text-slate-700">暂无仪表板</h2>
           <p className="mt-2 text-sm text-slate-500">
-            Create your first dashboard to start visualizing data.
+            创建你的第一个仪表板来可视化数据。
           </p>
           <button
             onClick={() => setShowCreate(true)}
             className="mt-4 inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
           >
             <Plus className="h-4 w-4" />
-            Create Dashboard
+            创建仪表板
           </button>
         </div>
       ) : (
@@ -184,7 +184,7 @@ export default function DashboardsPage() {
                   </p>
                 )}
                 <div className="mt-3 flex items-center gap-4 text-xs text-slate-400">
-                  <span>{dashboard._count.widgets} widgets</span>
+                  <span>{dashboard._count.widgets} 个组件</span>
                   <span className="flex items-center gap-1">
                     <Clock className="h-3 w-3" />
                     {new Date(dashboard.updatedAt).toLocaleDateString()}

@@ -56,8 +56,8 @@ export default function DataSourceDetailPage() {
           setDs(null);
         }
       } catch (err) {
-        console.error("Failed to load:", err);
-        setError("Failed to load data source");
+        console.error("加载失败:", err);
+        setError("加载数据源失败");
       } finally {
         setLoading(false);
       }
