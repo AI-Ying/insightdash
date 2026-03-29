@@ -77,6 +77,8 @@ model WorkspaceMember {
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
   @@unique([userId, workspaceId])
+  @@index([userId])
+  @@index([workspaceId])
 }
 
 // ===== Data Models =====
@@ -91,6 +93,8 @@ model DataSource {
 
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   datasets  Dataset[]
+
+  @@index([workspaceId])
 }
 
 model Dataset {
@@ -104,6 +108,8 @@ model Dataset {
 
   dataSource DataSource @relation(fields: [dataSourceId], references: [id], onDelete: Cascade)
   widgets    Widget[]
+
+  @@index([dataSourceId])
 }
 
 // ===== Dashboard Models =====
@@ -122,6 +128,9 @@ model Dashboard {
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   createdBy User      @relation(fields: [createdById], references: [id])
   widgets   Widget[]
+
+  @@index([workspaceId])
+  @@index([createdById])
 }
 
 model Widget {
@@ -137,6 +146,9 @@ model Widget {
 
   dataset   Dataset?  @relation(fields: [datasetId], references: [id])
   dashboard Dashboard @relation(fields: [dashboardId], references: [id], onDelete: Cascade)
+
+  @@index([dashboardId])
+  @@index([datasetId])
 }
 
 // ===== Enums =====

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { hashPassword } from "@/lib/auth-utils";
 import { registerSchema } from "@/lib/validations";
 import { generateUniqueSlug } from "@/lib/utils";
+import { success, errors } from "@/lib/api-response";
 
 export async function POST(request: Request) {
   try {
@@ -10,10 +11,7 @@ export async function POST(request: Request) {
     const parsed = registerSchema.safeParse(body);
 
     if (!parsed.success) {
-      return NextResponse.json(
-        { error: parsed.error.issues[0].message },
-        { status: 400 }
-      );
+      return errors.validationError(parsed.error.issues[0].message);
     }
 
     const { name, email, password } = parsed.data;
@@ -23,10 +21,7 @@ export async function POST(request: Request) {
     });
 
     if (existingUser) {
-      return NextResponse.json(
-        { error: "Email already registered" },
-        { status: 409 }
-      );
+      return errors.badRequest("该邮箱已被注册");
     }
 
     const hashedPassword = await hashPassword(password);
@@ -56,15 +51,12 @@ export async function POST(request: Request) {
       },
     });
 
-    return NextResponse.json(
-      { message: "User created successfully", workspaceSlug: workspace.slug },
-      { status: 201 }
+    return success(
+      { message: "注册成功", workspaceSlug: workspace.slug },
+      201
     );
   } catch (error) {
     console.error("Registration error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return errors.serverError("注册失败，请稍后重试");
   }
 }
