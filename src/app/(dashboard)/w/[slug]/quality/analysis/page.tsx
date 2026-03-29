@@ -250,7 +250,7 @@ export default function QualityAnalysisPage() {
                     x1="0"
                     y1={`${100 - ((spcData[0]?.ucl || 100) - (spcData[0]?.lcl || 0)) / ((spcData[0]?.ucl || 100) - (spcData[0]?.lcl || 0) || 1) * 100}%`}
                     x2="100%"
-                    y1={`${100 - ((spcData[0]?.ucl || 100) - (spcData[0]?.lcl || 0)) / ((spcData[0]?.ucl || 100) - (spcData[0]?.lcl || 0) || 1) * 100}%`}
+                    y2={`${100 - ((spcData[0]?.ucl || 100) - (spcData[0]?.lcl || 0)) / ((spcData[0]?.ucl || 100) - (spcData[0]?.lcl || 0) || 1) * 100}%`}
                     stroke="#ef4444"
                     strokeWidth="2"
                     strokeDasharray="4,4"
@@ -260,7 +260,7 @@ export default function QualityAnalysisPage() {
                     x1="0"
                     y1={`${100 - ((spcData[0]?.xBar || 0) - (spcData[0]?.lcl || 0)) / ((spcData[0]?.ucl || 100) - (spcData[0]?.lcl || 0) || 1) * 100}%`}
                     x2="100%"
-                    y1={`${100 - ((spcData[0]?.xBar || 0) - (spcData[0]?.lcl || 0)) / ((spcData[0]?.ucl || 100) - (spcData[0]?.lcl || 0) || 1) * 100}%`}
+                    y2={`${100 - ((spcData[0]?.xBar || 0) - (spcData[0]?.lcl || 0)) / ((spcData[0]?.ucl || 100) - (spcData[0]?.lcl || 0) || 1) * 100}%`}
                     stroke="#3b82f6"
                     strokeWidth="2"
                   />
@@ -408,7 +408,7 @@ export default function QualityAnalysisPage() {
             },
             {
               title: "不良改善优先级",
-              desc: paretoData.length > 0 ? `优先解决 "${paretoData[0]?.name}"，可减少 ${paretoData[0]?.percentage?.toFixed(0) || 0}% 不良` : "暂无数据",
+              desc: paretoData.length > 0 ? `优先解决 "${paretoData[0]?.name}"，可减少 ${paretoData[0]?.cumulativePct?.toFixed(0) || 0}% 不良` : "暂无数据",
               color: "blue",
             },
             {
