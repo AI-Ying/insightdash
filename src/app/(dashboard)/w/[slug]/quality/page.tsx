@@ -168,6 +168,14 @@ export default function QualityDashboardPage() {
             <Plus className="h-4 w-4" />
             录入
           </Link>
+          {/* Shifts link */}
+          <Link
+            href={`/w/${slug}/quality/shifts`}
+            className="flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+          >
+            <TrendingUp className="h-4 w-4" />
+            班次对比
+          </Link>
         </div>
       </div>
 
