@@ -89,3 +89,45 @@ export const TEMPLATE_CATEGORIES = [
   "统计/政府",
   "实用工具",
 ];
+
+// =============================================================================
+// Application Constants
+// =============================================================================
+
+export const APP_NAME = "InsightDash";
+export const APP_URL = process.env.NEXTAUTH_URL || "https://insightdash-faa2.onrender.com";
+
+/**
+ * Sample data URLs (used for demo/development)
+ */
+export const SAMPLE_DATA = {
+  /** Factory sensors sample CSV */
+  SENSORS: "/sample/factory_sensors.csv",
+  /** Quality monitoring sample CSV */
+  QUALITY: "/sample/quality-sample.csv",
+} as const;
+
+/**
+ * API timeout settings (in milliseconds)
+ */
+export const API_TIMEOUT = {
+  DEFAULT: 10000,    // 10 seconds
+  UPLOAD: 60000,    // 60 seconds for file uploads
+  TEST: 15000,      // 15 seconds for connection tests
+} as const;
+
+/**
+ * Pagination defaults
+ */
+export const PAGINATION = {
+  DEFAULT_PAGE_SIZE: 20,
+  MAX_PAGE_SIZE: 100,
+} as const;
+
+/**
+ * CSV upload constraints
+ */
+export const CSV_LIMITS = {
+  MAX_SIZE: 10 * 1024 * 1024, // 10MB
+  MAX_ROWS: 10000,
+} as const;

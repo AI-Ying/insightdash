@@ -18,6 +18,7 @@ import {
   getDeviceDetail,
   type QualityRecord,
 } from "@/lib/quality-parser";
+import { SAMPLE_DATA } from "@/lib/constants";
 import { DrillDownNav } from "@/components/charts/quality/drill-down-nav";
 import { DeviceDetailPanel } from "@/components/charts/quality/device-detail-panel";
 import { BarChart3, TrendingUp, TrendingDown, AlertTriangle, Minus, History, ChevronRight } from "lucide-react";
@@ -40,7 +41,7 @@ export default function QualityDashboardPage() {
   useEffect(() => {
     async function loadSampleData() {
       try {
-        const res = await fetch("/sample/quality-sample.csv");
+        const res = await fetch(SAMPLE_DATA.QUALITY);
         const text = await res.text();
         const parsed = parseQualityCSV(text);
         setRecords(parsed);

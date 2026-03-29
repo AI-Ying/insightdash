@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyWorkspaceMembership } from "@/lib/api-utils";
 import { parseCSV } from "@/lib/csv-parser";
+import { SAMPLE_DATA, API_TIMEOUT } from "@/lib/constants";
 
 export async function POST(
   _request: Request,
@@ -24,9 +25,9 @@ export async function POST(
   }
 
   // Fetch the sample CSV
-  const csvResponse = await fetch(
-    `${process.env.NEXTAUTH_URL || "https://insightdash-faa2.onrender.com"}/sample/factory_sensors.csv`
-  );
+  const csvResponse = await fetch(SAMPLE_DATA.SENSORS, {
+    signal: AbortSignal.timeout(API_TIMEOUT.DEFAULT),
+  });
 
   if (!csvResponse.ok) {
     return NextResponse.json(

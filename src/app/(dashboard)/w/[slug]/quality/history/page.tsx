@@ -13,6 +13,7 @@ import {
   type QualityRecord,
 } from "@/lib/quality-parser";
 import { TimeRangeSelector, getDateRange, type TimeRange } from "@/components/charts/quality/time-range-selector";
+import { SAMPLE_DATA } from "@/lib/constants";
 import { TrendChart } from "@/components/charts/quality/trend-chart";
 import { ShiftChart } from "@/components/charts/quality/shift-chart";
 import { ArrowLeft } from "lucide-react";
@@ -36,7 +37,7 @@ export default function QualityHistoryPage() {
   useEffect(() => {
     async function loadSampleData() {
       try {
-        const res = await fetch("/sample/quality-sample.csv");
+        const res = await fetch(SAMPLE_DATA.QUALITY);
         const text = await res.text();
         const parsed = parseQualityCSV(text);
         setRecords(parsed);
