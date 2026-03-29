@@ -21,7 +21,7 @@ export function ExportDialog({ open, onClose, dashboardTitle, targetRef }: Expor
 
   const handleExport = async () => {
     if (!targetRef.current) {
-      setError("无法获取仪表板内容");
+      setError("无法获取仪表板内容，请确保页面已加载");
       return;
     }
 
@@ -33,8 +33,8 @@ export function ExportDialog({ open, onClose, dashboardTitle, targetRef }: Expor
       await exportToPDF(targetRef.current, filename, options);
       onClose();
     } catch (e) {
-      console.error("Export failed:", e);
-      setError("导出失败，请重试");
+      const message = e instanceof Error ? e.message : "导出失败，请重试";
+      setError(message);
     } finally {
       setLoading(false);
     }
