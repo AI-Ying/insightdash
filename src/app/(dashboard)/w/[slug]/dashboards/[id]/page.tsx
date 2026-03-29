@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Plus } from "lucide-react";
+import { ArrowLeft, Plus, FileDown } from "lucide-react";
 import Link from "next/link";
 import { WidgetGrid } from "@/components/dashboard/widget-grid";
 import { WidgetConfigPanel } from "@/components/dashboard/widget-config-panel";
+import { ExportDialog } from "@/components/dashboard/export/export-dialog";
 import type { WidgetConfig, WidgetPosition, DatasetSchema } from "@/lib/types";
 
 interface Widget {
@@ -43,6 +44,8 @@ export default function DashboardEditorPage() {
   const [loading, setLoading] = useState(true);
   const [panelOpen, setPanelOpen] = useState(false);
   const [editingWidget, setEditingWidget] = useState<Widget | null>(null);
+  const [exportOpen, setExportOpen] = useState(false);
+  const dashboardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     async function init() {
@@ -213,21 +216,40 @@ export default function DashboardEditorPage() {
             )}
           </div>
         </div>
-        <button
-          onClick={handleAddWidget}
-          className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
-        >
-          <Plus className="h-4 w-4" />
-          添加组件
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setExportOpen(true)}
+            className="flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+          >
+            <FileDown className="h-4 w-4" />
+            导出 PDF
+          </button>
+          <button
+            onClick={handleAddWidget}
+            className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
+          >
+            <Plus className="h-4 w-4" />
+            添加组件
+          </button>
+        </div>
       </div>
 
       {/* Widget Grid */}
-      <WidgetGrid
-        widgets={dashboard.widgets}
-        onEdit={handleEditWidget}
-        onDelete={handleDeleteWidget}
-        editable
+      <div ref={dashboardRef} className="bg-white rounded-xl border border-slate-200 p-6">
+        <WidgetGrid
+          widgets={dashboard.widgets}
+          onEdit={handleEditWidget}
+          onDelete={handleDeleteWidget}
+          editable
+        />
+      </div>
+
+      {/* Export Dialog */}
+      <ExportDialog
+        open={exportOpen}
+        onClose={() => setExportOpen(false)}
+        dashboardTitle={dashboard.title}
+        targetRef={dashboardRef}
       />
 
       {/* Widget Config Panel */}
