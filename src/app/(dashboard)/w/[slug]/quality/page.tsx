@@ -21,7 +21,7 @@ import {
 import { SAMPLE_DATA } from "@/lib/constants";
 import { DrillDownNav } from "@/components/charts/quality/drill-down-nav";
 import { DeviceDetailPanel } from "@/components/charts/quality/device-detail-panel";
-import { BarChart3, TrendingUp, TrendingDown, AlertTriangle, Minus, History, ChevronRight, Plus, Database } from "lucide-react";
+import { BarChart3, TrendingUp, TrendingDown, AlertTriangle, Minus, History, ChevronRight, Plus, Database, Activity } from "lucide-react";
 
 export default function QualityDashboardPage() {
   const params = useParams();
@@ -183,6 +183,14 @@ export default function QualityDashboardPage() {
           >
             <Database className="h-4 w-4" />
             数据源
+          </Link>
+          {/* OEE link */}
+          <Link
+            href={`/w/${slug}/quality/oee`}
+            className="flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+          >
+            <Activity className="h-4 w-4" />
+            OEE
           </Link>
         </div>
       </div>
