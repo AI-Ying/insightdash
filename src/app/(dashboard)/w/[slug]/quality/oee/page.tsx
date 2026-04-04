@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -46,17 +46,33 @@ export default function OEEPage() {
     loadData();
   }, []);
 
-  const workshops = ["全部", ...Array.from(new Set(records.map((r) => r.workshop)))];
-  const filteredRecords = selectedWorkshop === "全部"
-    ? records
-    : records.filter((r) => r.workshop === selectedWorkshop);
+  const workshops = useMemo(
+    () => ["全部", ...Array.from(new Set(records.map((r) => r.workshop)))],
+    [records]
+  );
+
+  const filteredRecords = useMemo(
+    () =>
+      selectedWorkshop === "全部"
+        ? records
+        : records.filter((r) => r.workshop === selectedWorkshop),
+    [records, selectedWorkshop]
+  );
 
   // Calculate OEE per device
-  const oeeData: OEEData[] = (() => {
-    const deviceMap = new Map<string, { total: number; good: number; defect: number; line: string }>();
+  const oeeData: OEEData[] = useMemo(() => {
+    const deviceMap = new Map<
+      string,
+      { total: number; good: number; defect: number; line: string }
+    >();
 
     filteredRecords.forEach((r) => {
-      const existing = deviceMap.get(r.device) || { total: 0, good: 0, defect: 0, line: r.line };
+      const existing = deviceMap.get(r.device) || {
+        total: 0,
+        good: 0,
+        defect: 0,
+        line: r.line,
+      };
       deviceMap.set(r.device, {
         total: existing.total + r.total,
         good: existing.good + r.good,
@@ -67,44 +83,99 @@ export default function OEEPage() {
 
     // Simulate A (Availability) and P (Performance) based on defect patterns
     // In real implementation, these would come from PLC/scada data
-    return Array.from(deviceMap.entries()).map(([device, data]) => {
-      // Simulated values (in production, these come from actual measurements)
-      const availability = 85 + Math.random() * 10; // 85-95%
-      const performance = 80 + Math.random() * 15;  // 80-95%
-      const quality = data.total > 0 ? (data.good / data.total) * 100 : 0;
-      const oee = (availability / 100) * (performance / 100) * (quality / 100) * 100;
+    return Array.from(deviceMap.entries())
+      .map(([device, data]) => {
+        // Simulated values (in production, these come from actual measurements)
+        const availability = 85 + Math.random() * 10; // 85-95%
+        const performance = 80 + Math.random() * 15; // 80-95%
+        const quality = data.total > 0 ? (data.good / data.total) * 100 : 0;
+        const oee =
+          (availability / 100) * (performance / 100) * (quality / 100) * 100;
 
-      return {
-        device,
-        line: data.line,
-        availability,
-        performance,
-        quality,
-        oee,
-      };
-    }).sort((a, b) => b.oee - a.oee);
-  })();
+        return {
+          device,
+          line: data.line,
+          availability,
+          performance,
+          quality,
+          oee,
+        };
+      })
+      .sort((a, b) => b.oee - a.oee);
+  }, [filteredRecords]);
 
   // Calculate averages
-  const avgOEE = oeeData.length > 0 ? oeeData.reduce((sum, d) => sum + d.oee, 0) / oeeData.length : 0;
-  const avgAvailability = oeeData.length > 0 ? oeeData.reduce((sum, d) => sum + d.availability, 0) / oeeData.length : 0;
-  const avgPerformance = oeeData.length > 0 ? oeeData.reduce((sum, d) => sum + d.performance, 0) / oeeData.length : 0;
-  const avgQuality = oeeData.length > 0 ? oeeData.reduce((sum, d) => sum + d.quality, 0) / oeeData.length : 0;
+  const avgOEE = useMemo(
+    () =>
+      oeeData.length > 0
+        ? oeeData.reduce((sum, d) => sum + d.oee, 0) / oeeData.length
+        : 0,
+    [oeeData]
+  );
+  const avgAvailability = useMemo(
+    () =>
+      oeeData.length > 0
+        ? oeeData.reduce((sum, d) => sum + d.availability, 0) / oeeData.length
+        : 0,
+    [oeeData]
+  );
+  const avgPerformance = useMemo(
+    () =>
+      oeeData.length > 0
+        ? oeeData.reduce((sum, d) => sum + d.performance, 0) / oeeData.length
+        : 0,
+    [oeeData]
+  );
+  const avgQuality = useMemo(
+    () =>
+      oeeData.length > 0
+        ? oeeData.reduce((sum, d) => sum + d.quality, 0) / oeeData.length
+        : 0,
+    [oeeData]
+  );
 
   // World-class OEE benchmark
-  const getOEEGrade = (oee: number) => {
-    if (oee >= 85) return { grade: "A", color: "text-green-600", bg: "bg-green-100", label: "世界级" };
-    if (oee >= 70) return { grade: "B", color: "text-blue-600", bg: "bg-blue-100", label: "良好" };
-    if (oee >= 60) return { grade: "C", color: "text-yellow-600", bg: "bg-yellow-100", label: "一般" };
-    return { grade: "D", color: "text-red-600", bg: "bg-red-100", label: "需改善" };
-  };
+  const getOEEGrade = useMemo(() => {
+    return (oee: number) => {
+      if (oee >= 85)
+        return {
+          grade: "A",
+          color: "text-green-600",
+          bg: "bg-green-100",
+          label: "世界级",
+        };
+      if (oee >= 70)
+        return {
+          grade: "B",
+          color: "text-blue-600",
+          bg: "bg-blue-100",
+          label: "良好",
+        };
+      if (oee >= 60)
+        return {
+          grade: "C",
+          color: "text-yellow-600",
+          bg: "bg-yellow-100",
+          label: "一般",
+        };
+      return {
+        grade: "D",
+        color: "text-red-600",
+        bg: "bg-red-100",
+        label: "需改善",
+      };
+    };
+  }, []);
 
   // Losses breakdown (simulated)
-  const losses = {
-    availability: 100 - avgAvailability,
-    performance: 100 - avgPerformance,
-    quality: 100 - avgQuality,
-  };
+  const losses = useMemo(
+    () => ({
+      availability: 100 - avgAvailability,
+      performance: 100 - avgPerformance,
+      quality: 100 - avgQuality,
+    }),
+    [avgAvailability, avgPerformance, avgQuality]
+  );
 
   if (loading) {
     return (

@@ -25,19 +25,17 @@ export function ChartWrapper({ type, config, title, datasetSchema }: ChartWrappe
     );
   }
 
-  const chartProps = { data, config, title };
-
   switch (type) {
     case "BAR_CHART":
-      return <BarChartWidget {...chartProps} />;
+      return <BarChartWidget data={data} config={config} title={title} />;
     case "LINE_CHART":
-      return <LineChartWidget {...chartProps} />;
+      return <LineChartWidget data={data} config={config} title={title} />;
     case "PIE_CHART":
-      return <PieChartWidget {...chartProps} />;
+      return <PieChartWidget data={data} config={config} title={title} />;
     case "AREA_CHART":
-      return <AreaChartWidget {...chartProps} />;
+      return <AreaChartWidget data={data} config={config} title={title} />;
     case "KPI_CARD":
-      return <KpiCard {...chartProps} />;
+      return <KpiCard data={data} config={config} title={title} />;
     default:
       return (
         <div className="flex h-full items-center justify-center text-sm text-slate-400">

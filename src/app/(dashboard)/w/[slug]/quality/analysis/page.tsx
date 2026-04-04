@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -53,15 +53,19 @@ export default function QualityAnalysisPage() {
   }, []);
 
   // Filter records
-  const filteredRecords = selectedWorkshop === "全部"
-    ? records
-    : records.filter((r) => r.workshop === selectedWorkshop);
+  const filteredRecords = useMemo(() => {
+    return selectedWorkshop === "全部"
+      ? records
+      : records.filter((r) => r.workshop === selectedWorkshop);
+  }, [selectedWorkshop, records]);
 
   // Get unique workshops
-  const workshops = ["全部", ...Array.from(new Set(records.map((r) => r.workshop)))];
+  const workshops = useMemo(() => {
+    return ["全部", ...Array.from(new Set(records.map((r) => r.workshop)))];
+  }, [records]);
 
   // Calculate SPC data (X-bar chart for individual values)
-  const spcData: SPCData[] = (() => {
+  const spcData: SPCData[] = useMemo(() => {
     if (filteredRecords.length === 0) return [];
 
     // Aggregate by device and timestamp to get rates
@@ -101,10 +105,10 @@ export default function QualityAnalysisPage() {
       label: `设备${i + 1}`,
       isOutOfControl: r.rate > ucl || r.rate < lcl,
     }));
-  })();
+  }, [filteredRecords]);
 
   // Calculate Pareto data
-  const paretoData: ParetoData[] = (() => {
+  const paretoData: ParetoData[] = useMemo(() => {
     if (filteredRecords.length === 0) return [];
 
     // Count defects by type
@@ -133,10 +137,10 @@ export default function QualityAnalysisPage() {
         cumulativePct: total > 0 ? (cumulative / total) * 100 : 0,
       };
     });
-  })();
+  }, [filteredRecords]);
 
   // Calculate Cpk (Process Capability Index)
-  const cpk = (() => {
+  const cpk = useMemo(() => {
     if (spcData.length === 0) return null;
     const ucl = spcData[0].ucl;
     const lcl = spcData[0].lcl;
@@ -147,7 +151,7 @@ export default function QualityAnalysisPage() {
     const cpu = (100 - xBar) / (3 * sigma);
     const cpl = (xBar - 90) / (3 * sigma);
     return Math.min(cpu, cpl);
-  })();
+  }, [spcData]);
 
   // Count out-of-control points
   const outOfControlCount = spcData.filter((d) => d.isOutOfControl).length;

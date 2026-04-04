@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import {
   PieChart as RechartsPieChart,
   Pie,
@@ -10,9 +11,9 @@ import {
 } from "recharts";
 import type { ChartProps } from "@/lib/types";
 
-const DEFAULT_COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#ec4899", "#06b6d4", "#84cc16"];
+import { DEFAULT_COLORS, TOOLTIP_STYLE } from "@/lib/chart-config";
 
-export function PieChartWidget({ data, config }: ChartProps) {
+export const PieChartWidget = React.memo(function PieChartWidget({ data, config }: ChartProps) {
   const categoryField = config.categoryField || config.xField || "name";
   const valueField = config.valueField || config.yField || "value";
   const colors = config.colors || DEFAULT_COLORS;
@@ -44,14 +45,10 @@ export function PieChartWidget({ data, config }: ChartProps) {
           ))}
         </Pie>
         <Tooltip
-          contentStyle={{
-            borderRadius: "8px",
-            border: "1px solid #e2e8f0",
-            boxShadow: "0 4px 6px -1px rgba(0,0,0,0.1)",
-          }}
+          contentStyle={TOOLTIP_STYLE}
         />
         <Legend />
       </RechartsPieChart>
     </ResponsiveContainer>
   );
-}
+});

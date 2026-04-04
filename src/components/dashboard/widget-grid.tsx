@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { ChartWrapper } from "@/components/charts/chart-wrapper";
 import type { WidgetConfig, WidgetPosition, DatasetSchema } from "@/lib/types";
 import { Settings, Trash2 } from "lucide-react";
@@ -17,6 +18,12 @@ interface WidgetData {
   } | null;
 }
 
+interface ProcessedWidget extends WidgetData {
+  parsedConfig: WidgetConfig;
+  parsedPosition: WidgetPosition;
+  parsedDatasetSchema: DatasetSchema | null;
+}
+
 interface WidgetGridProps {
   widgets: WidgetData[];
   onEdit?: (widgetId: string) => void;
@@ -32,6 +39,22 @@ const HEIGHT_MAP: Record<number, string> = {
 };
 
 export function WidgetGrid({ widgets, onEdit, onDelete, editable = false }: WidgetGridProps) {
+  const processedWidgets = useMemo<ProcessedWidget[]>(() => {
+    return widgets.map((widget) => {
+      const parsedConfig = (typeof widget.config === "string" ? JSON.parse(widget.config) : widget.config || {}) as WidgetConfig;
+      const parsedPosition = (typeof widget.position === "string" ? JSON.parse(widget.position) : widget.position || { col: 0, row: 0, w: 1, h: 2 }) as WidgetPosition;
+      const rawSchema = widget.dataset?.schema;
+      const parsedDatasetSchema = (typeof rawSchema === "string" ? JSON.parse(rawSchema) : rawSchema || null) as DatasetSchema | null;
+
+      return {
+        ...widget,
+        parsedConfig,
+        parsedPosition,
+        parsedDatasetSchema,
+      };
+    });
+  }, [widgets]);
+
   if (widgets.length === 0) {
     return (
       <div className="rounded-xl border-2 border-dashed border-slate-300 p-12 text-center">
@@ -45,13 +68,9 @@ export function WidgetGrid({ widgets, onEdit, onDelete, editable = false }: Widg
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      {widgets.map((widget) => {
-        const config = (typeof widget.config === "string" ? JSON.parse(widget.config) : widget.config || {}) as WidgetConfig;
-        const position = (typeof widget.position === "string" ? JSON.parse(widget.position) : widget.position || { col: 0, row: 0, w: 1, h: 2 }) as WidgetPosition;
-        const rawSchema = widget.dataset?.schema;
-        const datasetSchema = (typeof rawSchema === "string" ? JSON.parse(rawSchema) : rawSchema || null) as DatasetSchema | null;
-        const heightClass = HEIGHT_MAP[position.h] || "h-72";
-        const colSpan = position.w === 2 ? "md:col-span-2" : "";
+      {processedWidgets.map((widget) => {
+        const heightClass = HEIGHT_MAP[widget.parsedPosition.h] || "h-72";
+        const colSpan = widget.parsedPosition.w === 2 ? "md:col-span-2" : "";
 
         return (
           <div
@@ -82,9 +101,9 @@ export function WidgetGrid({ widgets, onEdit, onDelete, editable = false }: Widg
             <div className="flex-1 min-h-0">
               <ChartWrapper
                 type={widget.type}
-                config={config}
+                config={widget.parsedConfig}
                 title={widget.title}
-                datasetSchema={datasetSchema}
+                datasetSchema={widget.parsedDatasetSchema}
               />
             </div>
           </div>

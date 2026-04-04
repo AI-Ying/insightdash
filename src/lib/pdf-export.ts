@@ -15,29 +15,35 @@ export async function exportToPDF(
   filename: string,
   options: ExportOptions = { paperSize: "A4", orientation: "portrait" }
 ): Promise<void> {
-  if (!element || element.scrollWidth === 0 || element.scrollHeight === 0) {
-    throw new Error("仪表板内容为空或未加载完成");
+  // SSR Guard
+  if (typeof window === "undefined" || typeof document === "undefined") {
+    throw new Error("PDF export is only available in browser environment");
   }
 
-  // Create isolated iframe with no external styles
-  const iframe = document.createElement('iframe');
-  const iframeStyle = iframe.style;
-  iframeStyle.cssText = `position:absolute;left:-9999px;top:0;width:${element.scrollWidth}px;height:${element.scrollHeight}px;border:none;`;
-  document.body.appendChild(iframe);
+  try {
+    if (!element || element.scrollWidth === 0 || element.scrollHeight === 0) {
+      throw new Error("仪表板内容为空或未加载完成");
+    }
 
-  const idoc = iframe.contentDocument || iframe.contentWindow?.document;
-  if (!idoc) {
-    document.body.removeChild(iframe);
-    throw new Error("无法创建PDF内容");
-  }
-  const ibody = idoc.body;
-  if (!ibody) {
-    document.body.removeChild(iframe);
-    throw new Error("无法创建PDF内容");
-  }
+    // Create isolated iframe with no external styles
+    const iframe = document.createElement('iframe');
+    const iframeStyle = iframe.style;
+    iframeStyle.cssText = `position:absolute;left:-9999px;top:0;width:${element.scrollWidth}px;height:${element.scrollHeight}px;border:none;`;
+    document.body.appendChild(iframe);
 
-  // Write base HTML with COMPLETE rgb color override
-  idoc.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+    const idoc = iframe.contentDocument || iframe.contentWindow?.document;
+    if (!idoc) {
+      document.body.removeChild(iframe);
+      throw new Error("无法创建PDF内容");
+    }
+    const ibody = idoc.body;
+    if (!ibody) {
+      document.body.removeChild(iframe);
+      throw new Error("无法创建PDF内容");
+    }
+
+    // Write base HTML with COMPLETE rgb color override
+    idoc.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
   <style>
     * { 
       box-sizing: border-box; 
@@ -128,77 +134,97 @@ export async function exportToPDF(
     .border-b { border-bottom: 1px solid #e2e8f0; }
   </style>
   </head><body><div class="dashboard"></div></body></html>`);
-  idoc.close();
+    idoc.close();
 
-  // Get the dashboard container - create if not exists
-  let dashContainer = ibody.querySelector('.dashboard');
-  if (!dashContainer) {
-    dashContainer = idoc.createElement('div');
-    dashContainer.className = 'dashboard';
-    ibody.appendChild(dashContainer);
-  }
-  
-  // Clone and clean the original content
-  const content = element.cloneNode(true) as HTMLElement;
-  cleanElement(content);
-  dashContainer.appendChild(content);
+    // Get the dashboard container - create if not exists
+    let dashContainer = ibody.querySelector('.dashboard');
+    if (!dashContainer) {
+      dashContainer = idoc.createElement('div');
+      dashContainer.className = 'dashboard';
+      ibody.appendChild(dashContainer);
+    }
+    
+    // Clone and clean the original content
+    const content = element.cloneNode(true) as HTMLElement;
+    cleanElement(content);
+    dashContainer.appendChild(content);
 
-  await new Promise(r => setTimeout(r, 200));
+    await new Promise(r => setTimeout(r, 200));
 
-  const html2canvas = (await import('html2canvas')).default;
-  
-  const canvas = await html2canvas(ibody, {
-    scale: 2,
-    useCORS: true,
-    logging: false,
-    backgroundColor: "#ffffff",
-    onclone: (cdoc, cbody) => {
-      // Final cleanup - remove any remaining stylesheets
-      cdoc.querySelectorAll('link[rel="stylesheet"]').forEach(l => l.remove());
-      // Ensure all colors are rgb
-      cbody.querySelectorAll('*').forEach(el => {
-        const htmlEl = el as HTMLElement;
-        const s = htmlEl.getAttribute('style') || '';
-        if (s.includes('oklch')) {
-          htmlEl.setAttribute('style', s.replace(/oklch\([^)]*\)/g, 'rgb(128,128,128)'));
-        } else {
-          // Ensure visible
-          if (!s.includes('background') && !s.includes('color')) {
-            htmlEl.style.backgroundColor = 'white';
-            htmlEl.style.color = '#1e293b';
-          }
-        }
+    let canvas;
+    try {
+      const html2canvas = (await import('html2canvas')).default;
+      
+      canvas = await html2canvas(ibody, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: "#ffffff",
+        onclone: (cdoc, cbody) => {
+          // Final cleanup - remove any remaining stylesheets
+          cdoc.querySelectorAll('link[rel="stylesheet"]').forEach(l => l.remove());
+          // Ensure all colors are rgb
+          cbody.querySelectorAll('*').forEach(el => {
+            const htmlEl = el as HTMLElement;
+            const s = htmlEl.getAttribute('style') || '';
+            if (s.includes('oklch')) {
+              htmlEl.setAttribute('style', s.replace(/oklch\([^)]*\)/g, 'rgb(128,128,128)'));
+            } else {
+              // Ensure visible
+              if (!s.includes('background') && !s.includes('color')) {
+                htmlEl.style.backgroundColor = 'white';
+                htmlEl.style.color = '#1e293b';
+              }
+            }
+          });
+          cbody.style.backgroundColor = 'white';
+        },
       });
-      cbody.style.backgroundColor = 'white';
-    },
-  });
+    } catch (canvasError) {
+      document.body.removeChild(iframe);
+      throw new Error("Failed to render content to canvas: " + (canvasError instanceof Error ? canvasError.message : String(canvasError)));
+    }
 
-  const pdf = new jsPDF({
-    orientation: options.orientation,
-    unit: "mm",
-    format: options.paperSize === "A4" ? "a4" : "letter",
-  });
+    let pdf;
+    try {
+      pdf = new jsPDF({
+        orientation: options.orientation,
+        unit: "mm",
+        format: options.paperSize === "A4" ? "a4" : "letter",
+      });
+    } catch (pdfError) {
+      document.body.removeChild(iframe);
+      throw new Error("Failed to create PDF document: " + (pdfError instanceof Error ? pdfError.message : String(pdfError)));
+    }
 
-  const pageWidth = pdf.internal.pageSize.getWidth();
-  const pageHeight = pdf.internal.pageSize.getHeight();
-  const imgWidth = pageWidth;
-  const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const imgWidth = pageWidth;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-  const imgData = canvas.toDataURL("image/png");
+    const imgData = canvas.toDataURL("image/png");
 
-  let heightLeft = imgHeight;
-  let yPosition = 0;
+    let heightLeft = imgHeight;
+    let yPosition = 0;
 
-  while (heightLeft > 0) {
-    pdf.addImage(imgData, "PNG", 0, yPosition, imgWidth, imgHeight);
-    heightLeft -= pageHeight;
-    yPosition -= pageHeight;
-    if (heightLeft > 0) pdf.addPage();
+    while (heightLeft > 0) {
+      pdf.addImage(imgData, "PNG", 0, yPosition, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+      yPosition -= pageHeight;
+      if (heightLeft > 0) pdf.addPage();
+    }
+
+    pdf.save(`${filename}.pdf`);
+
+    document.body.removeChild(iframe);
+  } catch (error) {
+    // Re-throw SSR-specific errors as-is
+    if (error instanceof Error && error.message.includes("browser environment")) {
+      throw error;
+    }
+    // Wrap other errors with context
+    throw new Error("PDF export failed: " + (error instanceof Error ? error.message : String(error)));
   }
-
-  pdf.save(`${filename}.pdf`);
-
-  document.body.removeChild(iframe);
 }
 
 /**

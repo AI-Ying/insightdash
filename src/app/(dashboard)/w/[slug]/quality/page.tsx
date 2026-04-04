@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -55,34 +55,34 @@ export default function QualityDashboardPage() {
   }, []);
 
   // Get available options
-  const workshops = getWorkshops(records);
-  const lines = lineParam ? getLines(records, workshopParam || undefined) : [];
-  const devices = deviceParam ? getDevices(records, workshopParam || undefined, lineParam || undefined) : [];
+  const workshops = useMemo(() => getWorkshops(records), [records]);
+  const lines = useMemo(() => lineParam ? getLines(records, workshopParam || undefined) : [], [records, lineParam, workshopParam]);
+  const devices = useMemo(() => deviceParam ? getDevices(records, workshopParam || undefined, lineParam || undefined) : [], [records, deviceParam, workshopParam, lineParam]);
 
   // Filter records based on drilldown level
-  const filteredRecords = (() => {
+  const filteredRecords = useMemo(() => {
     let result = records;
     if (workshopParam) result = result.filter((r) => r.workshop === workshopParam);
     if (lineParam) result = result.filter((r) => r.line === lineParam);
     return result;
-  })();
+  }, [records, workshopParam, lineParam]);
 
   // Calculate metrics
-  const overall = getOverallMetrics(filteredRecords);
-  const byWorkshop = aggregateByWorkshop(records); // Always from all records
-  const byLine = workshopParam ? aggregateByLine(records, workshopParam) : [];
-  const byDevice = lineParam ? aggregateByDevice(records, workshopParam || undefined) : [];
-  const trend = calculate24hTrend(filteredRecords);
-  const alerts = checkAlerts(filteredRecords);
-  const defectDist = calculateDefectDistribution(filteredRecords);
+  const overall = useMemo(() => getOverallMetrics(filteredRecords), [filteredRecords]);
+  const byWorkshop = useMemo(() => aggregateByWorkshop(records), [records]); // Always from all records
+  const byLine = useMemo(() => workshopParam ? aggregateByLine(records, workshopParam) : [], [records, workshopParam]);
+  const byDevice = useMemo(() => lineParam ? aggregateByDevice(records, workshopParam || undefined) : [], [records, lineParam, workshopParam]);
+  const trend = useMemo(() => calculate24hTrend(filteredRecords), [filteredRecords]);
+  const alerts = useMemo(() => checkAlerts(filteredRecords), [filteredRecords]);
+  const defectDist = useMemo(() => calculateDefectDistribution(filteredRecords), [filteredRecords]);
 
   // Device detail
-  const deviceDetail = deviceParam && workshopParam && lineParam
+  const deviceDetail = useMemo(() => deviceParam && workshopParam && lineParam
     ? getDeviceDetail(records, workshopParam, lineParam, deviceParam)
-    : null;
+    : null, [records, deviceParam, workshopParam, lineParam]);
 
   // Current level
-  const currentLevel = deviceParam ? "device" : lineParam ? "line" : workshopParam ? "workshop" : "factory";
+  const currentLevel = useMemo(() => deviceParam ? "device" : lineParam ? "line" : workshopParam ? "workshop" : "factory", [deviceParam, lineParam, workshopParam]);
 
   if (loading) {
     return (

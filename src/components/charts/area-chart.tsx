@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import {
   AreaChart as RechartsAreaChart,
   Area,
@@ -12,16 +13,16 @@ import {
 } from "recharts";
 import type { ChartProps } from "@/lib/types";
 
-const DEFAULT_COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"];
+import { DEFAULT_COLORS, CHART_MARGINS, AXIS_STYLE, TOOLTIP_STYLE } from "@/lib/chart-config";
 
-export function AreaChartWidget({ data, config }: ChartProps) {
+export const AreaChartWidget = React.memo(function AreaChartWidget({ data, config }: ChartProps) {
   const xField = config.xField || "name";
   const yFields = config.yFields || (config.yField ? [config.yField] : ["value"]);
   const colors = config.colors || DEFAULT_COLORS;
 
   return (
     <ResponsiveContainer width="100%" height="100%">
-      <RechartsAreaChart data={data} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+      <RechartsAreaChart data={data} margin={CHART_MARGINS}>
         <defs>
           {yFields.map((field, i) => (
             <linearGradient key={field} id={`gradient-${field}`} x1="0" y1="0" x2="0" y2="1">
@@ -33,19 +34,15 @@ export function AreaChartWidget({ data, config }: ChartProps) {
         <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
         <XAxis
           dataKey={xField}
-          tick={{ fontSize: 12, fill: "#64748b" }}
-          axisLine={{ stroke: "#cbd5e1" }}
+          tick={AXIS_STYLE.tick}
+          axisLine={AXIS_STYLE.axisLine}
         />
         <YAxis
-          tick={{ fontSize: 12, fill: "#64748b" }}
-          axisLine={{ stroke: "#cbd5e1" }}
+          tick={AXIS_STYLE.tick}
+          axisLine={AXIS_STYLE.axisLine}
         />
         <Tooltip
-          contentStyle={{
-            borderRadius: "8px",
-            border: "1px solid #e2e8f0",
-            boxShadow: "0 4px 6px -1px rgba(0,0,0,0.1)",
-          }}
+          contentStyle={TOOLTIP_STYLE}
         />
         {yFields.length > 1 && <Legend />}
         {yFields.map((field, i) => (
@@ -61,4 +58,4 @@ export function AreaChartWidget({ data, config }: ChartProps) {
       </RechartsAreaChart>
     </ResponsiveContainer>
   );
-}
+});

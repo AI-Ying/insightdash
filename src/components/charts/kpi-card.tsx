@@ -1,9 +1,10 @@
 "use client";
 
+import * as React from "react";
 import type { ChartProps } from "@/lib/types";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 
-export function KpiCard({ data, config, title }: ChartProps) {
+export const KpiCard = React.memo(function KpiCard({ data, config, title }: ChartProps) {
   const valueField = config.valueField || config.yField || "value";
   const aggregation = config.aggregation || "sum";
 
@@ -53,4 +54,4 @@ export function KpiCard({ data, config, title }: ChartProps) {
       </div>
     </div>
   );
-}
+});
