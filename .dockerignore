@@ -1,0 +1,50 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Build outputs
+.next/
+**/.next/
+dist/
+build/
+out/
+
+# Environment files
+.env
+.env.local
+.env.*
+**/.env
+**/.env.local
+**/.env.*
+
+# Version control
+.git/
+.github/
+.gitignore
+
+# Logs
+*.log
+logs/
+**/*.log
+
+# Testing
+coverage/
+**/*.test.ts
+**/*.spec.ts
+**/*.test.tsx
+**/*.spec.tsx
+
+# IDE
+.vscode/
+.idea/
+
+# Documentation (optional, large)
+docs/
+
+# Misc
+*.md
+.eslintrc*
+.prettierrc*
+.husky/
+.atl/
+openspec/
