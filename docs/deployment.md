@@ -1,95 +1,231 @@
-# InsightDash Deployment Guide
+# InsightDash 自动化部署指南
 
-## Production Stack
+## 🎯 部署架构
 
-| Component      | Service          | Plan   | Notes                           |
-|----------------|------------------|--------|---------------------------------|
-| Web Service    | Render.com       | Free   | Node.js, auto-deploy from GitHub |
-| Database       | Render PostgreSQL | Free   | 1 GB storage, 30-day expiry     |
-| Source Code    | GitHub           | Public | AI-Ying/insightdash              |
+采用 **Render Blueprint + GitHub Actions** 双保险自动化部署方案：
 
-## Live URL
+| 组件 | 服务 | 功能 |
+|------|------|------|
+| **Web 服务** | Render.com | 托管 Next.js 应用，自动部署 |
+| **数据库** | Render PostgreSQL | 数据持久化 |
+| **CI/CD** | GitHub Actions | 代码检查、测试、构建验证 |
+| **监控** | Render Dashboard | 部署状态、日志、指标 |
 
-- **Production**: https://insightdash-faa2.onrender.com
-- **Repository**: https://github.com/AI-Ying/insightdash
+## 🚀 快速部署
 
-## Environment Variables
+### 方式一：自动部署（推荐）
 
-The following environment variables must be configured in the Render dashboard:
-
-| Variable          | Description                          | Example                                      |
-|-------------------|--------------------------------------|----------------------------------------------|
-| `DATABASE_URL`    | PostgreSQL connection string (internal) | `postgresql://user:pass@host/dbname`        |
-| `NEXTAUTH_SECRET` | JWT signing secret                   | `openssl rand -base64 32`                    |
-| `NEXTAUTH_URL`    | Public URL of the application        | `https://insightdash-faa2.onrender.com`      |
-| `PORT`            | Application port (auto-set by Render) | `10000`                                     |
-
-Optional (for OAuth):
-
-| Variable              | Description              |
-|-----------------------|--------------------------|
-| `GITHUB_CLIENT_ID`    | GitHub OAuth App ID      |
-| `GITHUB_CLIENT_SECRET` | GitHub OAuth App Secret |
-
-## Build & Start Commands
-
-Configured in Render Web Service settings:
-
-- **Build Command**: `npm install; npm run build`
-- **Start Command**: `npm run start`
-
-The `npm run build` script runs:
-```
-prisma generate && prisma db push && next build
-```
-
-This ensures:
-1. Prisma Client is generated
-2. Database schema is pushed (tables created/updated)
-3. Next.js application is built
-
-## Deployment Flow
-
-### Initial Setup
-
-1. Create a PostgreSQL database on Render (Free tier)
-2. Create a Web Service on Render, connect to the GitHub repo (Public Git Repository)
-3. Set environment variables (DATABASE_URL using Internal Database URL, NEXTAUTH_SECRET, NEXTAUTH_URL)
-4. Deploy - Render will clone, build, and start the application
-
-### Auto-Deploy
-
-Since we use Public Git Repository mode, auto-deploy is not available. Use **Manual Deploy** in the Render dashboard after pushing to GitHub, or set up a Blueprint for auto-deploy.
-
-### Manual Deploy Steps
-
-1. Push code to GitHub: `git push origin master`
-2. Go to Render dashboard > insightdash service
-3. Click "Manual Deploy" > "Deploy latest commit"
-
-## Local Development
+提交代码到 `master` 分支，自动触发部署：
 
 ```bash
-# Install dependencies
-npm install
-
-# Set up local environment
-cp .env.example .env.local
-# Edit .env.local with your database URL
-
-# Push database schema
-npx prisma db push
-
-# Start dev server
-npm run dev
+git add .
+git commit -m "feat: your changes"
+git push origin master
 ```
 
-For local development, you can use either:
-- A local PostgreSQL instance
-- The Render external database URL (for shared dev)
+Render 会自动检测到推送并部署最新代码。
 
-## Important Notes
+### 方式二：部署脚本
 
-- **Free tier spin-down**: Render free instances spin down after 15 minutes of inactivity. First request after spin-down takes ~50 seconds.
-- **Database expiry**: Free PostgreSQL databases expire after 30 days. Upgrade to a paid plan for persistence.
-- **Database URL**: Use the **Internal Database URL** for the web service (faster, same-region communication). Use **External Database URL** only for local development or external tools.
+使用本地部署脚本（包含测试和检查）：
+
+```bash
+./scripts/deploy.sh
+```
+
+### 方式三：手动部署
+
+如需手动触发：
+
+1. 推送代码到 GitHub
+2. 访问 [Render Dashboard](https://dashboard.render.com)
+3. 点击 "Manual Deploy" → "Deploy latest commit"
+
+## 📁 部署配置
+
+### 核心文件
+
+| 文件 | 用途 |
+|------|------|
+| `render.yaml` | Render Blueprint 配置，定义服务和数据库 |
+| `.github/workflows/ci-cd.yml` | GitHub Actions 工作流 |
+| `vercel.json` | Vercel 部署配置（备选方案） |
+| `scripts/deploy.sh` | 本地部署脚本 |
+
+### 环境变量
+
+在 Render Dashboard 中配置以下变量：
+
+**必需：**
+
+| 变量 | 说明 | 获取方式 |
+|------|------|----------|
+| `DATABASE_URL` | 数据库连接字符串 | Render 自动生成 |
+| `NEXTAUTH_SECRET` | JWT 签名密钥 | Render 自动生成 |
+| `NEXTAUTH_URL` | 应用公网地址 | `https://insightdash.onrender.com` |
+
+**可选（OAuth）：**
+
+| 变量 | 说明 |
+|------|------|
+| `GITHUB_CLIENT_ID` | GitHub OAuth App ID |
+| `GITHUB_CLIENT_SECRET` | GitHub OAuth App Secret |
+| `GOOGLE_CLIENT_ID` | Google OAuth Client ID |
+| `GOOGLE_CLIENT_SECRET` | Google OAuth Client Secret |
+
+## 🔧 初始设置
+
+### 1. 连接 GitHub 仓库
+
+1. 登录 [Render Dashboard](https://dashboard.render.com)
+2. 点击 "New +" → "Blueprint"
+3. 选择 `AI-Ying/insightdash` 仓库
+4. Render 自动读取 `render.yaml` 创建服务
+
+### 2. 配置环境变量
+
+在 Render Dashboard → insightdash → Environment 中设置：
+
+```bash
+NEXTAUTH_URL=https://insightdash.onrender.com
+```
+
+其他变量 Blueprint 已自动配置。
+
+### 3. 首次部署
+
+Blueprint 会自动执行：
+
+1. 创建 PostgreSQL 数据库
+2. 创建 Web Service
+3. 运行 `npm install`
+4. 生成 Prisma Client
+5. 推送数据库 Schema
+6. 构建 Next.js 应用
+7. 启动服务
+
+## 🔄 部署流程
+
+### 自动部署触发条件
+
+- ✅ 推送到 `master` 分支
+- ✅ Pull Request 合并到 `master`
+- ✅ 手动点击 "Manual Deploy"
+
+### 部署流程图
+
+```
+Push to master
+      ↓
+GitHub Actions
+├── Lint
+├── Test
+└── Build
+      ↓
+Render Webhook
+      ↓
+Render Deploy
+├── npm install
+├── prisma generate
+├── prisma db push
+└── next build
+      ↓
+Health Check (/api/health)
+      ↓
+Production ✅
+```
+
+## 🏥 健康检查
+
+应用提供健康检查端点：
+
+```bash
+curl https://insightdash-faa2.onrender.com/api/health
+```
+
+响应示例：
+
+```json
+{
+  "status": "healthy",
+  "timestamp": "2024-01-15T10:30:00.000Z",
+  "version": "0.1.0",
+  "services": {
+    "database": "connected",
+    "api": "running"
+  },
+  "uptime": 3600
+}
+```
+
+## 📊 监控与日志
+
+### Render Dashboard
+
+- **部署日志**: Dashboard → insightdash → Logs
+- **性能指标**: Dashboard → insightdash → Metrics
+- **环境变量**: Dashboard → insightdash → Environment
+
+### 查看部署状态
+
+```bash
+# 检查应用状态
+curl https://insightdash-faa2.onrender.com/api/health
+
+# 查看 GitHub Actions 状态
+# 访问: https://github.com/AI-Ying/insightdash/actions
+```
+
+## 🐛 故障排查
+
+### 部署失败
+
+1. **检查 GitHub Actions**: https://github.com/AI-Ying/insightdash/actions
+2. **查看 Render 日志**: Dashboard → Logs
+3. **常见原因**:
+   - 环境变量缺失
+   - 数据库连接失败
+   - 构建命令错误
+
+### 数据库迁移失败
+
+```bash
+# 手动推送 schema
+npx prisma db push
+```
+
+### 应用无法启动
+
+1. 检查环境变量是否正确设置
+2. 确认 `NEXTAUTH_SECRET` 已生成
+3. 查看 Render Logs 错误信息
+
+## 📝 更新记录
+
+### 2024-04-04 部署优化
+
+- ✅ 添加 `render.yaml` Blueprint 配置
+- ✅ 创建 GitHub Actions CI/CD 工作流
+- ✅ 添加 `/api/health` 健康检查端点
+- ✅ 创建 `scripts/deploy.sh` 部署脚本
+- ✅ 配置自动部署
+
+## 🔗 相关链接
+
+- **生产环境**: https://insightdash-faa2.onrender.com
+- **健康检查**: https://insightdash-faa2.onrender.com/api/health
+- **Render Dashboard**: https://dashboard.render.com
+- **GitHub 仓库**: https://github.com/AI-Ying/insightdash
+- **GitHub Actions**: https://github.com/AI-Ying/insightdash/actions
+
+## 💡 最佳实践
+
+1. **总是通过 PR 合并代码**，不要直接推送到 master
+2. **检查 CI/CD 状态** 后再合并 PR
+3. **监控部署日志** 确保部署成功
+4. **定期备份数据库**（免费 tier 30 天过期）
+5. **使用健康检查端点** 监控应用状态
+
+---
+
+**注意**: Render 免费 tier 会在 15 分钟不活动后休眠，首次访问可能需要 ~50 秒启动。

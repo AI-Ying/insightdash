@@ -1,0 +1,75 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Generate Prisma Client
+        run: npx prisma generate
+      
+      - name: Run linter
+        run: npm run lint
+      
+      - name: Run tests
+        run: npm test
+        env:
+          NODE_ENV: test
+
+  build:
+    runs-on: ubuntu-latest
+    needs: lint-and-test
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Generate Prisma Client
+        run: npx prisma generate
+      
+      - name: Build application
+        run: npm run build
+        env:
+          NODE_ENV: production
+          NEXTAUTH_SECRET: dummy-secret-for-build
+          NEXTAUTH_URL: http://localhost:3000
+          DATABASE_URL: postgresql://dummy:dummy@localhost:5432/dummy
+
+  notify:
+    runs-on: ubuntu-latest
+    needs: [lint-and-test, build]
+    if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Deployment Notification
+        run: |
+          echo "✅ CI/CD Pipeline completed successfully!"
+          echo "🚀 Render will auto-deploy from blueprint"
+          echo "🔗 Monitor deployment at: https://dashboard.render.com"
